@@ -57,8 +57,8 @@ extern void timer_init();
 
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION	0
 
-#define configTICK_RATE_HZ			10
-#define configTIMER_HZ				10
+#define configTIMER_HZ				100
+#define configTICK_RATE_HZ			configTIMER_HZ
 
 /* Build configuration for A20 SoC */
 #define CONFIG_A20				1

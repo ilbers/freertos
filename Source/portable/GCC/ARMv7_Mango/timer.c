@@ -33,7 +33,7 @@
 /* FreeRTOS tick processing */
 extern void FreeRTOS_Tick_Handler(void);
 
-static void timer_sched_tick()
+static inline void timer_sched_tick()
 {
 	uint64_t cval;
 
