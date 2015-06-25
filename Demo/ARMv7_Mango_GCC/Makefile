@@ -53,6 +53,7 @@ SRCS = $(PORT)/asm/head.S						\
        $(PORT)/port.c							\
        $(PORT)/timer.c							\
        $(DEMO_SOURCE)/uart.c						\
+       $(DEMO_SOURCE)/mango_core.c					\
        $(RTOS_SOURCE)/list.c						\
        $(RTOS_SOURCE)/queue.c						\
        $(RTOS_SOURCE)/tasks.c						\
