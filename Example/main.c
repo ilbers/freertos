@@ -20,30 +20,38 @@
 
 #include <FreeRTOS.h>
 #include <io.h>
+#include <mango.h>
 #include <sys_print.h>
 #include <task.h>
 
-void firstTask(void *unused)
+void watchdogTask(void *unused)
 {
-	sys_print_msg("In first task\r\n");
+	sys_print_msg("Starting watchdog task\r\n");
+
+	mango_watchdog_start();
 
 	for (;;)
 	{
-		vTaskDelay(1);
-		sys_print_msg("1");
+		mango_watchdog_ping();
+
+		/* Trigger watchdog every 5 seconds */
+		vTaskDelay(configTICK_RATE_HZ * 5);
 	}
 
 	vTaskDelete(NULL);
 }
 
-void secondTask(void *unused)
+void counterTask(void *unused)
 {
-	sys_print_msg("In second task\r\n");
+	uint32_t count = 0;
+
+	sys_print_msg("Starting counter task\r\n\n");
 
 	for (;;)
 	{
-		vTaskDelay(30);
-		sys_print_msg("2");
+		sys_print_msg("Run time: %d seconds\r", count++);
+
+		vTaskDelay(configTICK_RATE_HZ);
 	}
 
 	vTaskDelete(NULL);
@@ -53,33 +61,34 @@ int main(void)
 {
 	portBASE_TYPE ret;
 
-	sys_print_msg("Creating first task\r\n");
-	ret = xTaskCreate(firstTask,
-			  (portCHAR *)"firstTask",
+	sys_print_msg("\r\nRunning in partition #%d\r\n", mango_get_partition_id());
+
+	ret = xTaskCreate(watchdogTask,
+			  (portCHAR *)"watchdogTask",
 			  4096,
 			  NULL,
 			  configTIMER_TASK_PRIORITY - 1,
 			  NULL);
 	if (ret != pdPASS)
 	{
-		sys_print_msg("Error creating task, status was %d\r\n", ret);
+		sys_print_msg("Error creating watchdog task, code (%d)\r\n", ret);
 		return 1;
 	}
 
-	sys_print_msg("Creating second task\r\n");
-	ret = xTaskCreate(secondTask,
-			  (portCHAR *) "secondTask",
+	ret = xTaskCreate(counterTask,
+			  (portCHAR *) "counterTask",
 			  4096,
 			  NULL,
 			  configTIMER_TASK_PRIORITY - 1,
 			  NULL);
 	if (ret != pdPASS)
 	{
-		sys_print_msg("Error creating task, status was %d\r\n", ret);
+		sys_print_msg("Error creating counter task, code (%d)\r\n", ret);
 		return 1;
 	}
 
-	sys_print_msg("Starting scheduler\r\n");
+	sys_print_msg("Starting FreeRTOS scheduler\r\n");
+
 	vTaskStartScheduler();
 
 	sys_print_msg("Scheduler exited\r\n");
