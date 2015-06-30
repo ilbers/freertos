@@ -155,6 +155,8 @@ prefetch_abort_handler:				/* Prefetch abort handler */
 
 	.align	2
 irq_handler:
+	cpsid	i
+
 	sub	lr, lr, #4
 	push	{lr}
 

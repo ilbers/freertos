@@ -50,7 +50,7 @@ void start_kernel()
 	print_banner();
 
 	/* Clear interrupt mask */
-	enable_local_irqs();
+//	enable_local_irqs();
 
 	sys_print_msg("starting application...\r\n");
 
