@@ -34,5 +34,7 @@ uint32_t mango_watchdog_stop(void);
 uint32_t mango_watchdog_ping(void);
 uint32_t mango_watchdog_set_timeout(uint32_t timeout);
 
+uint32_t mango_console_write(uint8_t *buff, uint32_t size);
+
 #endif /* __MANGO_H__ */
 

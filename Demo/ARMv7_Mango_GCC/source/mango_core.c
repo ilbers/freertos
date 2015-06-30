@@ -34,6 +34,8 @@
 #define MANGO_HVC_WD_PING		0x32
 #define MANGO_HVC_WD_SET_TIMEOUT	0x33
 
+#define MANGO_HVC_CONSOLE_WRITE		0x40
+
 #define mango_hypervisor_call_0(nr)					\
 ({									\
 	register uint32_t _ret;						\
@@ -187,6 +189,18 @@ uint32_t mango_watchdog_set_timeout(uint32_t timeout)
 	uint32_t ret;
 
 	ret = mango_hypervisor_call_1(MANGO_HVC_WD_SET_TIMEOUT, timeout);
+
+	return ret;
+}
+
+/*******************************/
+/*     Mango console API       */
+/*******************************/
+uint32_t mango_console_write(uint8_t *buff, uint32_t size)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_2(MANGO_HVC_CONSOLE_WRITE, buff, size);
 
 	return ret;
 }
