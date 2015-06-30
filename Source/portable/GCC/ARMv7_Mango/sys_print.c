@@ -18,7 +18,9 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <stdint.h>
 #include <stdarg.h>
+#include <mango.h>
 #include <sys_print.h>
 
 static char buff[PRINT_BUFF_SIZE];
@@ -186,6 +188,22 @@ uint32_t sys_print_msg(const char *fmt, ...)
 	buff[len] = 0;
 
 	uart_tx(buff, len);
+
+	return len;
+}
+
+uint32_t mango_print_msg(const char *fmt, ...)
+{
+	va_list args;
+	int len;
+
+	va_start(args,fmt);
+	len = format_print_message(buff, fmt, args);
+	va_end(args);
+
+	buff[len] = 0;
+
+	mango_console_write((uint8_t *)buff, len);
 
 	return len;
 }

@@ -39,5 +39,6 @@ int32_t uart_rx(char *buff, uint32_t len);
 
 /* Main output routine */
 uint32_t sys_print_msg(const char *fmt, ...);
+uint32_t mango_print_msg(const char *fmt, ...);
 
 #endif /* __SYS_PRINT_H__ */

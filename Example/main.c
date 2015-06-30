@@ -26,7 +26,7 @@
 
 void watchdogTask(void *unused)
 {
-	sys_print_msg("Starting watchdog task\r\n");
+	mango_print_msg("Starting watchdog task\r\n");
 
 	mango_watchdog_start();
 
@@ -45,11 +45,11 @@ void counterTask(void *unused)
 {
 	uint32_t count = 0;
 
-	sys_print_msg("Starting counter task\r\n\n");
+	mango_print_msg("Starting counter task\r\n\n");
 
 	for (;;)
 	{
-		sys_print_msg("Run time: %d seconds\r", count++);
+		mango_print_msg("Run time: %d seconds\r", count++);
 
 		vTaskDelay(configTICK_RATE_HZ);
 	}
