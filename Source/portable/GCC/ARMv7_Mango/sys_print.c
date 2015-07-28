@@ -36,7 +36,7 @@ static int format_print_message(char *buff, const char *fmt, va_list argp)
 	unsigned short negative;
 
 	char x2c[]="0123456789abcdef";
-	char ascii[10]; /* Max 32-bit integer is: 4294967295 (0xffffffff), 10-digits */
+	char ascii[12]; /* Max 32-bit integer is: 4294967295 (0xffffffff), 10-digits */
 	char *s;
 
 	s = buff;
@@ -122,10 +122,15 @@ static int format_print_message(char *buff, const char *fmt, va_list argp)
 			if (s == 0)
 			{
 				s = ascii + sizeof(ascii);
-				*s = 0;
+				*--s = 0;
 
 				do
 				{
+					if ((fill > 0) && (count >= fill))
+					{
+						break;
+					}
+
 					*--s = x2c[u % base];
 					u /= base;
 					count++;

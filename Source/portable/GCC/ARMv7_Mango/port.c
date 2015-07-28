@@ -46,7 +46,13 @@ extern void vPortRestoreTaskContext(void);
 
 void vPortEnterCritical( void )
 {
-	ulPortSetInterruptMask();
+	if (ulCriticalNesting == 0)
+	{
+		/* Disable local IRQs if we are not in critical
+		 * section already.
+		 */
+		portCPU_IRQ_DISABLE();
+	}
 
 	ulCriticalNesting++;
 }
@@ -66,9 +72,9 @@ void vPortExitCritical( void )
 		if( ulCriticalNesting == portNO_CRITICAL_NESTING )
 		{
 			/* Critical nesting has reached zero so
-			 * all interrupt priorities should be unmasked.
+			 * all interrupts should be unmasked.
 			 */
-			portCLEAR_INTERRUPT_MASK();
+			 portCPU_IRQ_ENABLE();
 		}
 	}
 }
@@ -125,8 +131,6 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 	return pxTopOfStack;
 }
 
-#define __TODO__
-
 void FreeRTOS_Tick_Handler(void)
 {
 	/* Set interrupt mask before altering scheduler structures.
@@ -136,40 +140,12 @@ void FreeRTOS_Tick_Handler(void)
 	 * off interrupts in the CPU itself while the ICCPMR is being
 	 * updated.
 	 */
-//	gic_set_priority_mask((int32_t)(configMAX_API_CALL_INTERRUPT_PRIORITY << portPRIORITY_SHIFT));
 
 	/* Increment the RTOS tick. */
 	if (xTaskIncrementTick() != pdFALSE)
 	{
 		ulPortYieldRequired = pdTRUE;
 	}
-
-	/* Ensure all interrupt priorities are active again. */
-//	portCLEAR_INTERRUPT_MASK();
-
-}
-
-uint32_t ulPortSetInterruptMask(void)
-{
-	uint32_t ulReturn;
-
-	/* Interrupt in the CPU must be turned off while the ICCPMR is being updated. */
-	portCPU_IRQ_DISABLE();
-	if (gic_get_priority_mask() ==
-	    (uint32_t)(configMAX_API_CALL_INTERRUPT_PRIORITY << portPRIORITY_SHIFT))
-	{
-		/* Interrupts were already masked. */
-		ulReturn = pdTRUE;
-	}
-	else
-	{
-		ulReturn = pdFALSE;
-		gic_set_priority_mask((uint32_t)(configMAX_API_CALL_INTERRUPT_PRIORITY << portPRIORITY_SHIFT));
-	}
-
-	portCPU_IRQ_ENABLE();
-
-	return ulReturn;
 }
 
 BaseType_t xPortStartScheduler( void )

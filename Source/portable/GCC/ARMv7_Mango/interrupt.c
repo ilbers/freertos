@@ -23,6 +23,7 @@
 
 #include <interrupt.h>
 #include <io.h>
+#include <mango.h>
 #include <sys_print.h>
 
 static gicd_t gicd;
@@ -121,16 +122,16 @@ static void gic_cpu_init()
 
 void enable_local_irqs()
 {
-	CPSIE(i);
 	DSB(sy);
 	ISB(sy);
+	CPSIE(i);
 }
 
 void disable_local_irqs()
 {
-	CPSID(i);
 	DSB(sy);
 	ISB(sy);
+	CPSID(i);
 }
 
 uint32_t enable_one_irq(uint32_t nr)
@@ -176,10 +177,14 @@ void register_irq_handler(uint32_t nr, irq_handler_t handler)
 	}
 }
 
+
+static uint32_t nest = 0;
 void gic_do_interrupt()
 {
 	uint32_t reg;
 	uint32_t nr;
+
+	nest++;
 
 	/* Get the interrupt number */
 	reg = mem_read32(gicc.base_addr + GICC_IAR);
@@ -199,8 +204,17 @@ void gic_do_interrupt()
 	}
 	else
 	{
-		sys_print_msg("IRQ!: invalid interrupt number %d\r\n", nr);
+		sys_print_msg("IRQ: spurious interrupt\r\n");
+		sys_print_msg("     nr = %d\r\n", nr);
+		sys_print_msg("     PMR = %d\r\n", gic_get_priority_mask());
+		sys_print_msg("     nest = %d\r\n", nest);
+
+		mango_debug_call(0);
+
+		for (;;);
 	}
+
+	nest--;
 }
 
 void irq_init()

@@ -24,9 +24,14 @@
 #include <sys_print.h>
 #include <task.h>
 
+#include <lwip/tcpip.h>
+
+extern void networkTask(void *unused);
+extern void lwip_app_init(void *args);
+
 void watchdogTask(void *unused)
 {
-	mango_print_msg("Starting watchdog task\r\n");
+	mango_print_msg("-> Starting watchdog task\r\n");
 
 	mango_watchdog_start();
 
@@ -45,7 +50,7 @@ void counterTask(void *unused)
 {
 	uint32_t count = 0;
 
-	mango_print_msg("Starting counter task\r\n\n");
+	mango_print_msg("-> Starting counter task\r\n");
 
 	for (;;)
 	{
@@ -63,6 +68,7 @@ int main(void)
 
 	sys_print_msg("\r\nRunning in partition #%d\r\n", mango_get_partition_id());
 
+	/* Start watchdog */
 	ret = xTaskCreate(watchdogTask,
 			  (portCHAR *)"watchdogTask",
 			  4096,
@@ -75,6 +81,7 @@ int main(void)
 		return 1;
 	}
 
+	/* Start demo counter */
 	ret = xTaskCreate(counterTask,
 			  (portCHAR *) "counterTask",
 			  4096,
@@ -87,8 +94,23 @@ int main(void)
 		return 1;
 	}
 
-	sys_print_msg("Starting FreeRTOS scheduler\r\n");
+	/* Start network application */
+	ret = xTaskCreate(networkTask,
+			  (portCHAR *) "networkTask",
+			  4096,
+			  NULL,
+			  configTIMER_TASK_PRIORITY - 1,
+			  NULL);
+	if (ret != pdPASS)
+	{
+		sys_print_msg("Error creating network task, code (%d)\r\n", ret);
+		return 1;
+	}
 
+	/* Setup lwIP stack */
+	tcpip_init(lwip_app_init, NULL);
+
+	sys_print_msg("Starting FreeRTOS scheduler\r\n");
 	vTaskStartScheduler();
 
 	sys_print_msg("Scheduler exited\r\n");

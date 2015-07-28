@@ -89,17 +89,6 @@
 	pop	{r1}
 	str	r1, [r0]
 
-	/* Ensure the priority mask is correct for the critical
-	 * nesting depth.
-	 */
-	ldr	r2, ulICCPMRConst
-	ldr	r2, [r2]
-	cmp	r1, #0
-	moveq	r4, #255
-	ldrne	r4, ulMaxAPIPriorityMaskConst
-	ldrne	r4, [r4]
-	str	r4, [r2]
-
 	/* Restore all system mode registers other than the SP
 	 * (which is already being used).
 	 */
@@ -166,11 +155,11 @@ irq_handler:
 	cps	#SVC_MODE
 	push    {r0-r4, r12}
 
-	/* Increment nesting count.  r3 holds the address of
-	 * ulPortInterruptNesting for future use.  r1 holds the
-	 * original ulPortInterruptNesting value for future use.
+	/* Increment nesting count. r3 holds the address of
+	 * ulCriticalNestingConst for future use.  r1 holds the
+	 * original ulCriticalNestingConst value for future use.
 	 */
-	ldr	r3, ulPortInterruptNestingConst
+	ldr	r3, ulCriticalNestingConst
 	ldr	r1, [r3]
 	add	r4, r1, #1
 	str	r4, [r3]
@@ -259,5 +248,4 @@ ulCriticalNestingConst:		.word ulCriticalNesting
 vTaskSwitchContextConst:	.word vTaskSwitchContext
 ulMaxAPIPriorityMaskConst:	.word ulMaxAPIPriorityMask
 vApplicationIRQHandlerConst:	.word do_irq
-ulPortInterruptNestingConst:	.word ulPortInterruptNesting
 ulPortTaskHasFPUContextConst:	.word ulPortTaskHasFPUContext

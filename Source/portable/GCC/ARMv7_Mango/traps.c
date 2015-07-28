@@ -60,7 +60,7 @@ static void system_stop()
 
 void do_data_abort()
 {
-	sys_print_msg("trap: data abort\r\n");
+	mango_print_msg("trap: data abort\r\n");
 	system_stop();
 }
 

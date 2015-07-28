@@ -25,6 +25,7 @@
 #define MANGO_HVC_DC_WRITE		0x11
 #define MANGO_HVC_DC_READ		0x12
 #define MANGO_HVC_DC_CLOSE		0x13
+#define MANGO_HVC_DC_TX_FREE_SPACE	0x14
 
 #define MANGO_HVC_PARTITION_ID		0x20
 #define MANGO_HVC_PARTITION_RESET	0x21
@@ -35,6 +36,8 @@
 #define MANGO_HVC_WD_SET_TIMEOUT	0x33
 
 #define MANGO_HVC_CONSOLE_WRITE		0x40
+
+#define MANGO_HVC_DEBUG			0x50
 
 #define mango_hypervisor_call_0(nr)					\
 ({									\
@@ -132,6 +135,15 @@ uint32_t mango_dc_close(uint32_t ch)
 	return ret;
 }
 
+uint32_t mando_dc_tx_free_space(uint32_t ch)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_1(MANGO_HVC_DC_TX_FREE_SPACE, ch);
+
+	return ret;
+}
+
 /*******************************************/
 /*     Mango Partition Management API      */
 /*******************************************/
@@ -201,6 +213,18 @@ uint32_t mango_console_write(uint8_t *buff, uint32_t size)
 	uint32_t ret;
 
 	ret = mango_hypervisor_call_2(MANGO_HVC_CONSOLE_WRITE, buff, size);
+
+	return ret;
+}
+
+/*******************************/
+/*      Mango debug API        */
+/*******************************/
+uint32_t mango_debug_call(uint32_t code)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_1(MANGO_HVC_DEBUG, code);
 
 	return ret;
 }

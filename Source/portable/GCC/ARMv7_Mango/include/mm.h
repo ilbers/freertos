@@ -104,5 +104,7 @@ int32_t map_memory_region(uint32_t virt_addr,
 			  uint32_t size,
 			  uint32_t type);
 void flush_caches();
+void *memset(void *dest, int32_t val, uint32_t count);
+uint32_t memcpy(void *dest, void *source, uint32_t count);
 
 #endif /* __MM_H__ */

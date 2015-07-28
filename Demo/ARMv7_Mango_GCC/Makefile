@@ -29,52 +29,113 @@ DEMO_INCLUDE = ../Common/include
 DEMO_SOURCE  = source
 PORT         = $(RTOS_SOURCE)/portable/GCC/ARMv7_Mango
 APPLICATION  = ../../Example
+LWIP         = lwip
 
 BUILD_DIR = ./build
 
-CFLAGS = -O2 -Wall -Werror -mcpu=cortex-a7 -mno-unaligned-access -marm	\
+CFLAGS = -O2 -mcpu=cortex-a7 -mno-unaligned-access -marm		\
          -mfpu=vfpv4 -g							\
          -I./include							\
          -I$(RTOS_SOURCE)/include					\
-         -I $(DEMO_INCLUDE)						\
-         -I $(PORT)/include
+         -I$(DEMO_INCLUDE)						\
+         -I$(PORT)/include						\
+         -I$(LWIP)/src/include						\
+         -I$(LWIP)/src/include/ipv4					\
+         -I$(LWIP)/ports/mango/include
+
+CFLAGS_EXTRA = -Wall -Werror
 
 AFLAGS = -mcpu=cortex-a7 -mfpu=vfpv4 -marm				\
          -I $(PORT)/include
 
-SRCS = $(PORT)/asm/head.S						\
-       $(PORT)/asm/vector.S						\
-       $(PORT)/asm/inval_cache.S					\
-       $(PORT)/mm.c							\
-       $(PORT)/start.c							\
-       $(PORT)/interrupt.c						\
-       $(PORT)/sys_print.c						\
-       $(PORT)/traps.c							\
-       $(PORT)/port.c							\
-       $(PORT)/timer.c							\
-       $(DEMO_SOURCE)/uart.c						\
-       $(DEMO_SOURCE)/mango_core.c					\
-       $(RTOS_SOURCE)/list.c						\
-       $(RTOS_SOURCE)/queue.c						\
-       $(RTOS_SOURCE)/tasks.c						\
-       $(RTOS_SOURCE)/portable/MemMang/heap_4.c				\
-									\
-       $(APPLICATION)/main.c
+#########################################################################
+#                      Core FreeRTOS objects                            #
+#########################################################################
+CORE_SRCS = $(PORT)/asm/head.S						\
+            $(PORT)/asm/vector.S					\
+            $(PORT)/asm/inval_cache.S					\
+            $(PORT)/mm.c						\
+            $(PORT)/start.c						\
+            $(PORT)/interrupt.c						\
+            $(PORT)/sys_print.c						\
+            $(PORT)/traps.c						\
+            $(PORT)/port.c						\
+            $(PORT)/timer.c						\
+            $(DEMO_SOURCE)/uart.c					\
+            $(DEMO_SOURCE)/mango_core.c					\
+            $(RTOS_SOURCE)/list.c					\
+            $(RTOS_SOURCE)/queue.c					\
+            $(RTOS_SOURCE)/tasks.c					\
+            $(RTOS_SOURCE)/portable/MemMang/heap_4.c
 
-OBJS := $(SRCS:.c=.o)
-OBJS := $(OBJS:.S=.o)
+CORE_OBJS := $(CORE_SRCS:.c=.o)
+CORE_OBJS := $(CORE_OBJS:.S=.o)
 
-freertos: built_in.o
-	@echo [LD] FreeRTOS image
-	@$(LD) -EL -Map freertos.map -T freertos.lds $(BUILD_DIR)/built_in.o -o freertos.bin
-	@echo [OBJCOPY] freertos.bin
-	@$(OBJCOPY) -O binary -S freertos.bin freertos.Image
+core.o: $(CORE_OBJS)
+	@-rm -rf $(BUILD_DIR)/core
+	@-mkdir -p $(BUILD_DIR)/core
+	@-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/core
+	@echo [LD] core/built_in.o
+	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/core/built_in.o $(BUILD_DIR)/core/*.o
 
-built_in.o: $(OBJS)
-	@-rm -f $(BUILD_DIR)/built_in.o
-	@echo [LD] $@
-	@$(LD) $(LDFLAGS) -r -o $@ $(BUILD_DIR)/*.o
-	@mv $@ $(BUILD_DIR)
+#########################################################################
+#                         Application objects                           #
+#########################################################################
+APP_SRCS = $(APPLICATION)/main.c					\
+           $(APPLICATION)/network.c
+
+APP_OBJS := $(APP_SRCS:.c=.o)
+APP_OBJS := $(APP_OBJS:.S=.o)
+
+app.o: $(APP_OBJS)
+	@-rm -rf $(BUILD_DIR)/app
+	@-mkdir -p $(BUILD_DIR)/app
+	@-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/app
+	@echo [LD] app/built_in.o
+	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/app/built_in.o $(BUILD_DIR)/app/*.o
+
+#########################################################################
+#                            lwIP objects                              #
+#########################################################################
+LWIP_SRCS = $(LWIP)/src/core/init.c					\
+            $(LWIP)/src/core/def.c					\
+            $(LWIP)/src/core/dhcp.c					\
+            $(LWIP)/src/core/mem.c					\
+            $(LWIP)/src/core/memp.c					\
+            $(LWIP)/src/core/netif.c					\
+            $(LWIP)/src/core/pbuf.c					\
+            $(LWIP)/src/core/stats.c					\
+            $(LWIP)/src/core/sys.c					\
+            $(LWIP)/src/core/udp.c					\
+            $(LWIP)/src/core/tcp.c					\
+            $(LWIP)/src/core/tcp_in.c					\
+            $(LWIP)/src/core/tcp_out.c					\
+            $(LWIP)/src/core/ipv4/icmp.c				\
+            $(LWIP)/src/core/ipv4/ip.c					\
+            $(LWIP)/src/core/ipv4/ip_addr.c				\
+            $(LWIP)/src/core/ipv4/inet_chksum.c				\
+            $(LWIP)/src/core/lwip_timers.c				\
+            $(LWIP)/src/api/sockets.c					\
+            $(LWIP)/src/api/tcpip.c					\
+            $(LWIP)/src/api/api_lib.c					\
+            $(LWIP)/src/api/api_msg.c					\
+            $(LWIP)/src/api/netbuf.c					\
+            $(LWIP)/src/netif/etharp.c					\
+            $(LWIP)/ports/mango/netif/adapter.c				\
+            $(LWIP)/ports/mango/netif/pqueue.c				\
+            $(LWIP)/ports/mango/sys_arch.c
+
+LWIP_OBJS := $(LWIP_SRCS:.c=.o)
+LWIP_OBJS := $(LWIP_OBJS:.S=.o)
+
+lwip.o: $(LWIP_OBJS)
+	@-rm -rf $(BUILD_DIR)/lwip
+	@-mkdir -p $(BUILD_DIR)/lwip
+	@-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/lwip
+	@echo [LD] lwip/built_in.o
+	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/lwip/built_in.o $(BUILD_DIR)/lwip/*.o
+
+#########################################################################
 
 %.o: %.S
 	@echo [AS] $@
@@ -86,11 +147,20 @@ built_in.o: $(OBJS)
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@mv $@ $(BUILD_DIR)
 
-.PHONY: all
+freertos: app.o core.o lwip.o
+	@echo [LD] FreeRTOS image
+	@$(LD) -EL -Map freertos.map -T freertos.lds -o freertos.bin	\
+		$(BUILD_DIR)/core/built_in.o				\
+		$(BUILD_DIR)/app/built_in.o 				\
+		$(BUILD_DIR)/lwip/built_in.o
+	@echo [OBJCOPY] freertos.bin
+	@$(OBJCOPY) -O binary -S freertos.bin freertos.Image
+
+.DEFAULT_GOAL := all
 all: freertos
 
 .PHONY: clean
 clean:
 	@echo [CLEAN] $(BUILD_DIR)/*.o freertos.bin freertos.Image freertos.map
-	@-rm -f $(BUILD_DIR)/*.o
+	@-rm -rf $(BUILD_DIR)/*
 	@-rm -f freertos.bin freertos.Image freertos.map

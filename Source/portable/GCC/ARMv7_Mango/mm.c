@@ -452,6 +452,18 @@ uint32_t memcpy(void *dest, void *source, uint32_t count)
 	return copy_memory_region(dest, source, count);
 }
 
+void *memset(void *dest, int32_t val, uint32_t count)
+{
+	volatile uint8_t* ptrDest = (uint8_t*)dest;
+
+	while (val--)
+	{
+		*ptrDest++= val;
+	}
+
+	return dest;
+}
+
 extern uint32_t _bss_start, _bss_end;
 
 void flush_bss()

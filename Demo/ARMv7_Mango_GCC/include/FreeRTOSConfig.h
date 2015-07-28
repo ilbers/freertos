@@ -47,6 +47,7 @@ extern void vPortExitCritical(void);
 
 #define configMAX_API_CALL_INTERRUPT_PRIORITY	25
 #define configTICK_PRIORITY			30
+#define configLWIP_TASK_PRIORITY		30
 
 #define configUNIQUE_INTERRUPT_PRIORITIES	32
 
@@ -56,6 +57,9 @@ extern void timer_init();
 #define configTIMER_TASK_PRIORITY		(configMAX_PRIORITIES - 1)
 
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION	0
+
+#define configUSE_MUTEXES			1
+#define configUSE_COUNTING_SEMAPHORES		1
 
 #define configTIMER_HZ				1000
 #define configTICK_RATE_HZ			configTIMER_HZ

@@ -68,3 +68,15 @@ int32_t uart_rx(char *buff, uint32_t len)
 
 	return i;
 }
+
+uint32_t strlen(const char *buf)
+{
+	uint32_t i = 0;
+
+	while (*buf++ != 0)
+	{
+		i++;
+	}
+
+	return i;
+}

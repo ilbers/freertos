@@ -33,7 +33,20 @@
 #define portSTACK_TYPE			uint32_t
 #define portBASE_TYPE			long
 
+/* Called at the end of an ISR that can cause a context switch. */
+#define portEND_SWITCHING_ISR(xSwitchRequired)		\
+{							\
+	extern uint32_t ulPortYieldRequired;		\
+							\
+	if( xSwitchRequired != pdFALSE )		\
+	{						\
+		ulPortYieldRequired = pdTRUE;		\
+	}						\
+}
+
+#define portYIELD_FROM_ISR( x )		portEND_SWITCHING_ISR( x )
 #define portYIELD()			__asm volatile ( "SWI 0" );
+
 
 #define portTICK_PERIOD_MS		((portTickType )(1000 / configTICK_RATE_HZ))
 
@@ -61,12 +74,16 @@ typedef portSTACK_TYPE			StackType_t;
 #define portNO_FLOATING_POINT_CONTEXT	((portSTACK_TYPE) 0)
 
 /* Interrupts settings */
-extern uint32_t ulPortSetInterruptMask(void);
+extern void enable_local_irqs();
+extern void disable_local_irqs();
 #define portCPU_IRQ_ENABLE()		enable_local_irqs()
 #define portCPU_IRQ_DISABLE()		disable_local_irqs()
-#define portUNMASK_VALUE		(0xff)
-#define portCLEAR_INTERRUPT_MASK()	gic_set_priority_mask(portUNMASK_VALUE)
-#define portDISABLE_INTERRUPTS()	ulPortSetInterruptMask()
+
+#define portENABLE_INTERRUPTS()		vPortExitCritical()
+#define portDISABLE_INTERRUPTS()	vPortEnterCritical()
+
+/* #define portSET_INTERRUPT_MASK_FROM_ISR()				ulPortSetInterruptMask() */
+/* #define portCLEAR_INTERRUPT_MASK_FROM_ISR(x)				vPortClearInterruptMask(x) */
 
 /* Setup interrupt priority */
 #if configUNIQUE_INTERRUPT_PRIORITIES == 16
