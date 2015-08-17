@@ -18,11 +18,6 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/* This function is called by the TCP/IP stack when an IP packet
- * should be sent. It calls the function called low_level_output()
- * to do the actual transmission of the packet.
- */
-
 #include <sys_print.h>
 #include <netif/etharp.h>
 #include <netif/pqueue.h>
@@ -56,8 +51,6 @@ static void low_level_input(struct pbuf *p)
 	/* IP or ARP packet? */
 	case ETHTYPE_IP:
 	case ETHTYPE_ARP:
-		/* mango_print_msg(" -> Got IP/ARP packet\r\n"); */
-
 		/* full packet send to tcpip_thread to process */
 		if (this_netif->input(p, this_netif) != ERR_OK)
 		{
@@ -68,8 +61,7 @@ static void low_level_input(struct pbuf *p)
 
 		break;
 	default:
-		mango_print_msg(" -> Got unknown packet\r\n");
-
+		/* Unknown packet type */
 		pbuf_free(p);
 		p = NULL;
 
@@ -84,7 +76,7 @@ static void mango_dc_irq(void)
 
 	if (!this_netif)
 	{
-		mango_print_msg("error: RX processing failed, LwIP stack is down\r\n");
+		mango_print_msg("error: RX processing failed, lwIP stack is down\r\n");
 		return;
 	}
 
@@ -107,10 +99,12 @@ static void mango_dc_irq(void)
 		mango_print_msg("error: dc sync failed, requested (%d) - got (%d)\r\n",
 				size, n);
 		pbuf_free(p);
+
+		/* Reset DC channel */
+		mango_dc_reset(MANGO_LWIP_DC_CHANNEL);
+
 		return;
 	}
-
-	/* mango_print_msg("LwIP: RX, got %d bytes\r\n", n); */
 
 	if (pq_enqueue(rx_queue, (void *)p) < 0)
 	{
@@ -125,7 +119,7 @@ void mango_net_input_thread(void *netif)
 	struct pbuf *p;
 	SYS_ARCH_DECL_PROTECT(lev);
 
-	mango_print_msg("LwIP: starting RX thread\r\n");
+	mango_print_msg("lwIP: starting RX thread\r\n");
 
 	/* Register IRQ for incomming data channel data */
 	register_irq_handler(MANGO_LWIP_DC_IRQ_NR, mango_dc_irq);
@@ -159,7 +153,6 @@ void mango_net_input_thread(void *netif)
 
 		if (p)
 		{
-			mango_print_msg("LwIP: got a packet, process it\r\n");
 			low_level_input(p);
 		}
 	}
@@ -186,17 +179,15 @@ static err_t low_level_init(struct netif *netif)
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
 	unsigned char buf[MANGO_MAX_FRAME_SIZE];
+	uint32_t len = p->len;
 
-	mango_print_msg("LwIP: TX (%d) bytes\r\n", p->len);
-
-	if (mando_dc_tx_free_space(MANGO_LWIP_DC_CHANNEL) < p->len)
+	if (mango_dc_tx_free_space(MANGO_LWIP_DC_CHANNEL) < p->len)
 	{
-		mango_print_msg("error: TX failed, no space left in data channel\r\n");
 		return ERR_MEM;
 	}
 
 	/* set frame size in header */
-	memcpy(buf, (void *)&p->len, 4);
+	memcpy(buf, (void *)&len, 4);
 	/* fill data */
 	memcpy(buf + 4, p->payload, p->len);
 
@@ -217,8 +208,6 @@ static err_t mango_if_output(struct netif *netif,
 
 err_t mango_net_init(struct netif *netif)
 {
-	mango_print_msg("adapter init\r\n");
-
 	netif->name[0] = 'i';
 	netif->name[1] = '0';
 	netif->output = mango_if_output;

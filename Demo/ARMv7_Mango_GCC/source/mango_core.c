@@ -26,6 +26,7 @@
 #define MANGO_HVC_DC_READ		0x12
 #define MANGO_HVC_DC_CLOSE		0x13
 #define MANGO_HVC_DC_TX_FREE_SPACE	0x14
+#define MANGO_HVC_DC_RESET		0x15
 
 #define MANGO_HVC_PARTITION_ID		0x20
 #define MANGO_HVC_PARTITION_RESET	0x21
@@ -135,11 +136,20 @@ uint32_t mango_dc_close(uint32_t ch)
 	return ret;
 }
 
-uint32_t mando_dc_tx_free_space(uint32_t ch)
+uint32_t mango_dc_tx_free_space(uint32_t ch)
 {
 	uint32_t ret;
 
 	ret = mango_hypervisor_call_1(MANGO_HVC_DC_TX_FREE_SPACE, ch);
+
+	return ret;
+}
+
+uint32_t mango_dc_reset(uint32_t ch)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_1(MANGO_HVC_DC_RESET, ch);
 
 	return ret;
 }

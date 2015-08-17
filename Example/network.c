@@ -33,6 +33,9 @@ void status_callback(struct netif *net_if)
         if (netif_is_up(net_if) != 0)
 	{
 		mango_print_msg("lwIP: network is up\r\n");
+		mango_print_msg("lwIP: addr %d.%d.%d.%d\r\n",
+				net_if->ip_addr.addr & 0xff, (net_if->ip_addr.addr >> 8) & 0xff,
+				(net_if->ip_addr.addr >> 16) & 0xff, (net_if->ip_addr.addr >> 24) & 0xff);
 	}
 	else
 	{
@@ -46,7 +49,7 @@ void lwip_app_init(void *args)
 	ip_addr_t ip_addr, net_mask, gateway;
 	static struct netif net_if;
 
-	mango_print_msg("#### lwIP stack init ####\r\n");
+	mango_print_msg("lwIP: setup networking stack\r\n");
 
 	/* Set up the network interface */
 	ip_addr_set_zero(&gateway);

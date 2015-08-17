@@ -144,7 +144,7 @@ lwip.o: $(LWIP_OBJS)
 
 %.o: %.c
 	@echo [CC] $@
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(CFLAGS_EXTRA) -c $< -o $@
 	@mv $@ $(BUILD_DIR)
 
 freertos: app.o core.o lwip.o

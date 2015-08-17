@@ -26,7 +26,8 @@ uint32_t mango_dc_open(uint32_t ch, uint32_t dest);
 uint32_t mango_dc_close(uint32_t ch);
 uint32_t mango_dc_write(uint32_t ch, const uint8_t *p, uint32_t len);
 uint32_t mango_dc_read(uint32_t ch, uint8_t *p, uint32_t len);
-uint32_t mando_dc_tx_free_space(uint32_t ch);
+uint32_t mango_dc_tx_free_space(uint32_t ch);
+uint32_t mango_dc_reset(uint32_t ch);
 
 uint32_t mango_get_partition_id(void);
 
