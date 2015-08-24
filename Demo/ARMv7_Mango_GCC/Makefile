@@ -43,7 +43,7 @@ CFLAGS = -O2 -mcpu=cortex-a7 -mno-unaligned-access -marm		\
          -I$(LWIP)/src/include/ipv4					\
          -I$(LWIP)/ports/mango/include
 
-CFLAGS_EXTRA = -Wall -Werror
+CFLAGS_EXTRA =
 
 AFLAGS = -mcpu=cortex-a7 -mfpu=vfpv4 -marm				\
          -I $(PORT)/include
@@ -114,6 +114,7 @@ LWIP_SRCS = $(LWIP)/src/core/init.c					\
             $(LWIP)/src/core/ipv4/ip.c					\
             $(LWIP)/src/core/ipv4/ip_addr.c				\
             $(LWIP)/src/core/ipv4/inet_chksum.c				\
+            $(LWIP)/src/core/ipv4/ip_frag.c				\
             $(LWIP)/src/core/lwip_timers.c				\
             $(LWIP)/src/api/sockets.c					\
             $(LWIP)/src/api/tcpip.c					\

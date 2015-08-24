@@ -176,14 +176,14 @@ void vLwipAppsReleaseTxBuffer( void );
 /* IP reassembly and segmentation.These are orthogonal even
  * if they both deal with IP fragments
  */
-#define IP_REASSEMBLY					0
+#define IP_REASSEMBLY					1
 #define IP_REASS_MAX_PBUFS				10
 #define MEMP_NUM_REASSDATA				10
-#define IP_FRAG						0
+#define IP_FRAG						1
 
 #define ICMP_TTL					255
 
-/* Define LWIP_DHCP to 1 if you want DHCP configuration of
+/* Define LWIP_DHCP to 0 if you want DHCP configuration of
  * interfaces.
  */
 #define LWIP_DHCP					1

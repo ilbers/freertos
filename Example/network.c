@@ -90,28 +90,35 @@ void lwip_app_init(void *args)
 		       configTIMER_TASK_PRIORITY - 1);
 }
 
+static void vProcessConnection(struct netconn *pxNetCon)
+{
+	mango_print_msg("LwIP: connection to port 80 established.\r\n");
+}
+
 void networkTask(void *unused)
 {
-	long socket;
-	struct sockaddr_in addr;
+	struct netconn *pxHTTPListener, *pxNewConnection;
 
 	mango_print_msg("-> Starting network task\r\n");
 
-	socket = lwip_socket(AF_INET, SOCK_STREAM, 0);
-
-	if (socket >= 0)
-	{
-		memset(&addr, 0, sizeof(addr));
-		addr.sin_len = sizeof(addr);
-		addr.sin_family = AF_INET;
-		addr.sin_port = 1234;
-		addr.sin_addr.s_addr = inet_addr("192.167.20.1");
-
-		lwip_connect(socket, (struct sockaddr *)&addr, sizeof(addr));
-	}
+	/* Create a new tcp connection handle */
+	pxHTTPListener = netconn_new(NETCONN_TCP);
+	netconn_bind(pxHTTPListener, NULL, 80);
+	netconn_listen(pxHTTPListener);
 
 	for (;;)
 	{
-		vTaskDelay(configTICK_RATE_HZ * 5);
+		/* Wait for connection. */
+		netconn_accept(pxHTTPListener, &pxNewConnection);
+
+		if(pxNewConnection != NULL)
+		{
+			/* Service connection. */
+			vProcessConnection(pxNewConnection);
+			while (netconn_delete(pxNewConnection) != ERR_OK)
+			{
+				vTaskDelay(10);
+			}
+		}
 	}
 }

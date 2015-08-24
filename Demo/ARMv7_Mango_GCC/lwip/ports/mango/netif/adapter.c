@@ -80,36 +80,40 @@ static void mango_dc_irq(void)
 		return;
 	}
 
-	/* get frame size */
-	n = mango_dc_read(MANGO_LWIP_DC_CHANNEL, (void *)&size, 4);
-	if (n != 4)
+	for (;;)
 	{
-		mango_print_msg("error: dc sync failed, requested (%d) - got (%d)\r\n",
-				4, n);
-		return;
-	}
+		/* get frame size */
+		n = mango_dc_read(MANGO_LWIP_DC_CHANNEL, (void *)&size, 4);
+		if (n != 4)
+		{
+			/* Buffer is empty */
+			return;
+		}
 
-	/* allocate new pbuffer */
-	p = pbuf_alloc(PBUF_RAW, size, PBUF_POOL);
+		/* allocate new pbuffer */
+		p = pbuf_alloc(PBUF_RAW, size, PBUF_POOL);
 
-	/* move received packet into a new pbuf */
-	n = mango_dc_read(MANGO_LWIP_DC_CHANNEL, p->payload, size);
-	if (n != size)
-	{
-		mango_print_msg("error: dc sync failed, requested (%d) - got (%d)\r\n",
-				size, n);
-		pbuf_free(p);
+		/* move received packet into a new pbuf */
+		n = mango_dc_read(MANGO_LWIP_DC_CHANNEL, p->payload, size);
+		if (n != size)
+		{
+			mango_print_msg("error: dc sync failed, requested (%d) - got (%d)\r\n",
+					size, n);
+			pbuf_free(p);
 
-		/* Reset DC channel */
-		mango_dc_reset(MANGO_LWIP_DC_CHANNEL);
+			/* Reset DC channel */
+			mango_dc_reset(MANGO_LWIP_DC_CHANNEL);
 
-		return;
-	}
+			return;
+		}
 
-	if (pq_enqueue(rx_queue, (void *)p) < 0)
-	{
-		mango_print_msg("error: failed to queue RX packet\r\n");
-		pbuf_free(p);
+		/* mango_print_msg("LwIP: RX (%d) bytes\r\n", n); */
+
+		if (pq_enqueue(rx_queue, (void *)p) < 0)
+		{
+			mango_print_msg("error: failed to queue RX packet\r\n");
+			pbuf_free(p);
+		}
 	}
 }
 
@@ -180,6 +184,8 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
 	unsigned char buf[MANGO_MAX_FRAME_SIZE];
 	uint32_t len = p->len;
+
+	/* mango_print_msg("LwIP: TX (%d) bytes\r\n", len); */
 
 	if (mango_dc_tx_free_space(MANGO_LWIP_DC_CHANNEL) < p->len)
 	{
