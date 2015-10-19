@@ -22,7 +22,10 @@ STRIP      = $(CROSS_COMPILE)strip
 OBJCOPY    = $(CROSS_COMPILE)objcopy
 OBJDUMP    = $(CROSS_COMPILE)objdump
 
-PLATFORM = a20
+# Choose the target platform:
+# a20        - Allwinner A20 SoC
+# exynos5250 - Samsung Exynos5250 SoC
+PLATFORM ?= a20
 
 include platforms/$(PLATFORM)/Config.mk
 
