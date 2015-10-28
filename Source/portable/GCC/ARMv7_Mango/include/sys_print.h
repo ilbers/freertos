@@ -35,6 +35,7 @@ typedef struct
 void uart_init(void);
 int32_t uart_tx(const char *buff, uint32_t len);
 int32_t uart_rx(char *buff, uint32_t len);
+void register_uart_driver(uart_driver_t *drv);
 
 /* Main output routine */
 uint32_t sys_print_msg(const char *fmt, ...);
