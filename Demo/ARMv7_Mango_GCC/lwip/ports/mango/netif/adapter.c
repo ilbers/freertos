@@ -182,23 +182,30 @@ static err_t low_level_init(struct netif *netif)
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-	unsigned char buf[MANGO_MAX_FRAME_SIZE];
-	uint32_t len = p->len;
+	unsigned char buf[MANGO_MAX_FRAME_SIZE + SIZEOF_ETH_HDR + 4];
+	uint32_t len = p->tot_len, offset;
+	struct pbuf* q;
 
-	/* mango_print_msg("LwIP: TX (%d) bytes\r\n", len); */
-
-	if (mango_dc_tx_free_space(MANGO_LWIP_DC_CHANNEL) < p->len)
+	if (mango_dc_tx_free_space(MANGO_LWIP_DC_CHANNEL) < len)
 	{
 		return ERR_MEM;
 	}
 
 	/* set frame size in header */
 	memcpy(buf, (void *)&len, 4);
-	/* fill data */
-	memcpy(buf + 4, p->payload, p->len);
+
+	offset = 4;
+
+	/* compose a packet from buffers */
+	for (q = p; q != NULL; q = q->next)
+	{
+		/* fill data */
+		memcpy(buf + offset, q->payload, q->len);
+		offset += q->len;
+	}
 
 	/* send frame */
-	mango_dc_write(MANGO_LWIP_DC_CHANNEL, buf, p->len + 4);
+	mango_dc_write(MANGO_LWIP_DC_CHANNEL, buf, len + 4);
 
 	return ERR_OK;
 }
