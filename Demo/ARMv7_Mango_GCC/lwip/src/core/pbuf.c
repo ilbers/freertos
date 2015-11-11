@@ -376,7 +376,7 @@ pbuf_alloced_custom(pbuf_layer l, u16_t length, pbuf_type type, struct pbuf_cust
 
   p->pbuf.next = NULL;
   if (payload_mem != NULL) {
-    p->pbuf.payload = LWIP_MEM_ALIGN((void *)((u8_t *)payload_mem + offset));
+    p->pbuf.payload = (u8_t *)payload_mem + LWIP_MEM_ALIGN_SIZE(offset);
   } else {
     p->pbuf.payload = NULL;
   }
