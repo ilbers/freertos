@@ -39,6 +39,13 @@
 
 #define MANGO_HVC_DEBUG			0x50
 
+#define MANGO_HVC_NET_OPEN		0x61
+#define MANGO_HVC_NET_SET_MODE		0x62
+#define MANGO_HVC_NET_TX		0x63
+#define MANGO_HVC_NET_RX		0x64
+#define MANGO_HVC_NET_CLOSE		0x65
+#define MANGO_HVC_RX_SIZE		0x66
+
 #define mango_hypervisor_call_0(nr)					\
 ({									\
 	register uint32_t _ret;						\
@@ -229,11 +236,75 @@ uint32_t mango_console_write(uint8_t *buff, uint32_t size)
 /*******************************/
 /*      Mango debug API        */
 /*******************************/
+
 uint32_t mango_debug_call(uint32_t code)
 {
 	uint32_t ret;
 
 	ret = mango_hypervisor_call_1(MANGO_HVC_DEBUG, code);
+
+	return ret;
+}
+
+/*********************************/
+/*     Mango Networking API      */
+/*********************************/
+
+uint32_t mango_net_open(void)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_0(MANGO_HVC_NET_OPEN);
+
+	return ret;
+}
+
+uint32_t mango_net_tx(uint32_t dest, const uint8_t *p, uint32_t len)
+{
+	uint32_t ret;
+
+	ret =  mango_hypervisor_call_3(MANGO_HVC_NET_TX,
+				       dest,
+				       (uint32_t)p,
+				       len);
+
+	return ret;
+}
+
+uint32_t mango_net_rx(uint8_t *p, uint32_t len)
+{
+	uint32_t ret;
+
+	ret =  mango_hypervisor_call_2(MANGO_HVC_NET_RX,
+				       (uint32_t)p,
+				       len);
+
+	return ret;
+}
+
+uint32_t mango_net_close(void)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_0(MANGO_HVC_NET_CLOSE);
+
+	return ret;
+}
+
+uint32_t mango_net_set_mode(uint32_t mode)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_1(MANGO_HVC_NET_SET_MODE, mode);
+
+	return ret;
+}
+
+uint32_t mango_net_get_rx_size(void)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_0(MANGO_HVC_RX_SIZE);
 
 	return ret;
 }

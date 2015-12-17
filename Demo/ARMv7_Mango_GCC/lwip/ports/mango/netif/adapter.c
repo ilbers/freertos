@@ -30,11 +30,10 @@
 #include <interrupt.h>
 #include <mango.h>
 
-#define MANGO_LWIP_DC_CHANNEL	1				/* Channel ID to be used for networking */
-#define MANGO_LWIP_DC_IRQ_NR	(130 + MANGO_LWIP_DC_CHANNEL)	/* Data channel IRQ */
-#define MANGO_DEST_PARTITION	0				/* Partition ID to connect to */
+#define MANGO_LWIP_NET_IRQ_NR	140		/* Network interface IRQ */
+#define MANGO_DEST_PARTITION	0		/* Partition ID to connect to */
 
-#define MANGO_MAX_FRAME_SIZE	512
+#define MANGO_MAX_FRAME_SIZE	1500
 
 static struct netif *this_netif = 0;
 static pq_queue_t *rx_queue = 0;
@@ -69,10 +68,10 @@ static void low_level_input(struct pbuf *p)
 	}
 }
 
-static void mango_dc_irq(void)
+static void mango_net_irq(void)
 {
 	struct pbuf *p;
-	int n, size;
+	int ret, size;
 
 	if (!this_netif)
 	{
@@ -83,8 +82,8 @@ static void mango_dc_irq(void)
 	for (;;)
 	{
 		/* get frame size */
-		n = mango_dc_read(MANGO_LWIP_DC_CHANNEL, (void *)&size, 4);
-		if (n != 4)
+		size = mango_net_get_rx_size();
+		if (size == 0)
 		{
 			/* Buffer is empty */
 			return;
@@ -94,15 +93,11 @@ static void mango_dc_irq(void)
 		p = pbuf_alloc(PBUF_RAW, size, PBUF_POOL);
 
 		/* move received packet into a new pbuf */
-		n = mango_dc_read(MANGO_LWIP_DC_CHANNEL, p->payload, size);
-		if (n != size)
+		ret = mango_net_rx(p->payload, size);
+		if (ret)
 		{
-			mango_print_msg("error: dc sync failed, requested (%d) - got (%d)\r\n",
-					size, n);
+			mango_print_msg("error: net RX failed, code (%d)\r\n", ret);
 			pbuf_free(p);
-
-			/* Reset DC channel */
-			mango_dc_reset(MANGO_LWIP_DC_CHANNEL);
 
 			return;
 		}
@@ -126,19 +121,18 @@ void mango_net_input_thread(void *netif)
 	mango_print_msg("lwIP: starting RX thread\r\n");
 
 	/* Register IRQ for incomming data channel data */
-	register_irq_handler(MANGO_LWIP_DC_IRQ_NR, mango_dc_irq);
+	register_irq_handler(MANGO_LWIP_NET_IRQ_NR, mango_net_irq);
 
 	/* Open Mango data channel */
-	ret = mango_dc_open(MANGO_LWIP_DC_CHANNEL, MANGO_DEST_PARTITION);
+	ret = mango_net_open();
 	if (ret)
 	{
-		mango_print_msg("error: failed to open data channel #%d\r\n",
-				MANGO_LWIP_DC_CHANNEL);
+		mango_print_msg("error: failed to open network interface%d\r\n");
 		return;
 	}
 
-	gic_set_irq_priority(MANGO_LWIP_DC_IRQ_NR, configTICK_PRIORITY << portPRIORITY_SHIFT);
-	enable_one_irq(MANGO_LWIP_DC_IRQ_NR);
+	gic_set_irq_priority(MANGO_LWIP_NET_IRQ_NR, configTICK_PRIORITY << portPRIORITY_SHIFT);
+	enable_one_irq(MANGO_LWIP_NET_IRQ_NR);
 
 	for (;;)
 	{
@@ -186,15 +180,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 	uint32_t len = p->tot_len, offset;
 	struct pbuf* q;
 
-	if (mango_dc_tx_free_space(MANGO_LWIP_DC_CHANNEL) < len)
-	{
-		return ERR_MEM;
-	}
-
-	/* set frame size in header */
-	memcpy(buf, (void *)&len, 4);
-
-	offset = 4;
+	offset = 0;
 
 	/* compose a packet from buffers */
 	for (q = p; q != NULL; q = q->next)
@@ -205,7 +191,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 	}
 
 	/* send frame */
-	mango_dc_write(MANGO_LWIP_DC_CHANNEL, buf, len + 4);
+	mango_net_tx(MANGO_DEST_PARTITION, buf, len);
 
 	return ERR_OK;
 }

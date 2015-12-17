@@ -39,5 +39,12 @@ uint32_t mango_console_write(uint8_t *buff, uint32_t size);
 
 uint32_t mango_debug_call(uint32_t code);
 
+uint32_t mango_net_open(void);
+uint32_t mango_net_tx(uint32_t dest, const uint8_t *p, uint32_t len);
+uint32_t mango_net_rx(uint8_t *p, uint32_t len);
+uint32_t mango_net_close(void);
+uint32_t mango_net_set_mode(uint32_t mode);
+uint32_t mango_net_get_rx_size(void);
+
 #endif /* __MANGO_H__ */
 
