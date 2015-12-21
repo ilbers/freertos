@@ -22,11 +22,7 @@ STRIP      = $(CROSS_COMPILE)strip
 OBJCOPY    = $(CROSS_COMPILE)objcopy
 OBJDUMP    = $(CROSS_COMPILE)objdump
 
-# Choose the target platform:
-# a20        - Allwinner A20 SoC
-# exynos5250 - Samsung Exynos5250 SoC
-PLATFORM ?= a20
-
+include Config.mk
 include platforms/$(PLATFORM)/Config.mk
 
 RTOS_SOURCE     = ../../Source
@@ -46,13 +42,12 @@ CFLAGS = -O2 -mno-unaligned-access -marm				\
          -I$(RTOS_SOURCE)/include					\
          -I$(DEMO_INCLUDE)						\
          -I$(PORT)/include						\
-         -I$(LWIP)/src/include						\
-         -I$(LWIP)/src/include/ipv4					\
-         -I$(LWIP)/ports/mango/include					\
          -I./platforms/$(PLATFORM)/include
 
 AFLAGS = -mfpu=vfpv4 -marm						\
          -I $(PORT)/include
+
+OS_COMPONENTS := core.o app.o
 
 #########################################################################
 #                      Core FreeRTOS objects                            #
@@ -82,25 +77,24 @@ core.o: $(CORE_OBJS)
 	@-rm -rf $(BUILD_DIR)/core
 	@-mkdir -p $(BUILD_DIR)/core
 	@-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/core
-	@echo [LD] core/built_in.o
-	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/core/built_in.o $(BUILD_DIR)/core/*.o
+	@echo [LD] core/FreeRTOS.o
+	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/core/FreeRTOS.o $(BUILD_DIR)/core/*.o
 
 #########################################################################
 #                         Application objects                           #
 #########################################################################
-APP_SRCS = $(APPLICATION)/main.c					\
-           $(APPLICATION)/message.c					\
-           $(APPLICATION)/network.c
+app.o:
+	@make -C $(APPLICATION)
 
-APP_OBJS := $(APP_SRCS:.c=.o)
-APP_OBJS := $(APP_OBJS:.S=.o)
+# ------------------------------------------ #
+#               CONFIG_NET_LWIP              #
+# ------------------------------------------ #
+ifneq (,$(findstring CONFIG_NET_LWIP, $(DCONFIG)))
 
-app.o: $(APP_OBJS)
-	@-rm -rf $(BUILD_DIR)/app
-	@-mkdir -p $(BUILD_DIR)/app
-	@-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/app
-	@echo [LD] app/built_in.o
-	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/app/built_in.o $(BUILD_DIR)/app/*.o
+CFLAGS +=				\
+         -I$(LWIP)/src/include		\
+         -I$(LWIP)/src/include/ipv4	\
+         -I$(LWIP)/ports/mango/include
 
 #########################################################################
 #                            lwIP objects                              #
@@ -137,6 +131,8 @@ LWIP_SRCS = $(LWIP)/src/core/init.c					\
 LWIP_OBJS := $(LWIP_SRCS:.c=.o)
 LWIP_OBJS := $(LWIP_OBJS:.S=.o)
 
+OS_COMPONENTS += lwip.o
+
 lwip.o: $(LWIP_OBJS)
 	@-rm -rf $(BUILD_DIR)/lwip
 	@-mkdir -p $(BUILD_DIR)/lwip
@@ -145,6 +141,7 @@ lwip.o: $(LWIP_OBJS)
 	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/lwip/built_in.o $(BUILD_DIR)/lwip/*.o
 
 #########################################################################
+endif
 
 %.o: %.S
 	@echo [AS] $@
@@ -156,12 +153,11 @@ lwip.o: $(LWIP_OBJS)
 	@$(CC) $(CFLAGS) $(CFLAGS_EXTRA) $(CFLAGS_PLATFORM) -c $< -o $@
 	@mv $@ $(BUILD_DIR)
 
-freertos: app.o core.o lwip.o
+freertos: $(OS_COMPONENTS)
 	@echo [LD] FreeRTOS image
 	@$(LD) -EL -Map freertos.map -T freertos.lds -o freertos.bin	\
-		$(BUILD_DIR)/core/built_in.o				\
-		$(BUILD_DIR)/app/built_in.o 				\
-		$(BUILD_DIR)/lwip/built_in.o
+		$(BUILD_DIR)/core/FreeRTOS.o				\
+		`find $(BUILD_DIR) -name 'built_in.o'`
 	@echo [OBJCOPY] freertos.bin
 	@$(OBJCOPY) -O binary -S freertos.bin freertos.Image
 
