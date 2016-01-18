@@ -19,7 +19,8 @@
 #                         Application objects                           #
 #########################################################################
 APP_SRCS = $(APPLICATION)/main.c	\
-           $(APPLICATION)/message.c
+           $(APPLICATION)/message.c	\
+           $(APPLICATION)/dc.c
 
 # ------------------------------------------ #
 #               CONFIG_NET_LWIP              #

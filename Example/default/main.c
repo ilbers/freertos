@@ -25,6 +25,7 @@
 
 #include <lwip/tcpip.h>
 
+extern void dcTask(void *unused);
 extern void networkTask(void *unused);
 extern void lwip_app_init(void *args);
 
@@ -103,6 +104,19 @@ int main(void)
 	if (ret != pdPASS)
 	{
 		sys_print_msg("Error creating network task, code (%d)\r\n", ret);
+		return 1;
+	}
+
+	/* Start data-channel application */
+	ret = xTaskCreate(dcTask,
+			  (portCHAR *) "dcTask",
+			  4096,
+			  NULL,
+			  configTIMER_TASK_PRIORITY - 1,
+			  NULL);
+	if (ret != pdPASS)
+	{
+		sys_print_msg("Error creating data-channel task, code (%d)\r\n", ret);
 		return 1;
 	}
 
