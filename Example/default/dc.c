@@ -58,5 +58,8 @@ void dcTask(void *unused)
 	/* Start echo server */
 	enable_one_irq(DC_IRQ_NR);
 
-	for (;;);
+	for (;;)
+	{
+		vTaskDelay(configTICK_RATE_HZ);
+	}
 }
