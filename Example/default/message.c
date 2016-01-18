@@ -38,7 +38,7 @@ void app_process_msg(uint8_t *data)
 	switch (msg->type)
 	{
 	case MSG_TYPE_INFO:
-		mango_print_msg("info: %s\r\n", msg->data);
+		mango_print_msg("\r\ninfo: %s\r\n", msg->data);
 		break;
 	default:
 		mango_print_msg("error: invalid message type (%d)\r\n", msg->type);
