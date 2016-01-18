@@ -21,8 +21,7 @@
 #include <stdarg.h>
 #include <mango.h>
 #include <sys_print.h>
-
-static char buff[PRINT_BUFF_SIZE];
+#include <portmacro.h>
 
 static int format_print_message(char *buff, const char *fmt, va_list argp)
 {
@@ -182,6 +181,7 @@ static int format_print_message(char *buff, const char *fmt, va_list argp)
 
 uint32_t sys_print_msg(const char *fmt, ...)
 {
+	char buff[PRINT_BUFF_SIZE];
 	va_list args;
 	int len;
 
@@ -191,13 +191,16 @@ uint32_t sys_print_msg(const char *fmt, ...)
 
 	buff[len] = 0;
 
+	portENTER_CRITICAL();
 	uart_tx(buff, len);
+	portEXIT_CRITICAL();
 
 	return len;
 }
 
 uint32_t mango_print_msg(const char *fmt, ...)
 {
+	char buff[PRINT_BUFF_SIZE];
 	va_list args;
 	int len;
 
@@ -207,7 +210,9 @@ uint32_t mango_print_msg(const char *fmt, ...)
 
 	buff[len] = 0;
 
+	portENTER_CRITICAL();
 	mango_console_write((uint8_t *)buff, len);
+	portEXIT_CRITICAL();
 
 	return len;
 }
