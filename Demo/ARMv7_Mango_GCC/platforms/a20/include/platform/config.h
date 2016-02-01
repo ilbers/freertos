@@ -25,4 +25,7 @@
 #define GIC_CPU_BASE				0x01c82000
 #define NR_CPU_SPIS				128		/* Shared peripheral interrupts */
 
+#define configFPU_NUM_REGISTERS			32
+#define configFPU_BYTES_PER_REGISTER		8
+
 #endif /* __A20_PLATFORM_CONFIG_H__ */

@@ -34,7 +34,7 @@ uint32_t ulPortInterruptNesting = 0UL;
  * non-zero then a floating point context must be saved and restored
  * for the task.
  */
-uint32_t ulPortTaskHasFPUContext = pdFALSE;
+uint32_t ulPortTaskHasFPUContext = pdTRUE;
 
 __attribute__(( used )) const uint32_t ulMaxAPIPriorityMask = (configMAX_API_CALL_INTERRUPT_PRIORITY << portPRIORITY_SHIFT);
 
@@ -80,6 +80,9 @@ void vPortExitCritical( void )
 
 portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters )
 {
+	int i; 
+	int steps = (configFPU_NUM_REGISTERS * configFPU_BYTES_PER_REGISTER) / sizeof(portSTACK_TYPE); 
+
 	*pxTopOfStack = 0;
 	pxTopOfStack--;
 	*pxTopOfStack = 0;
@@ -125,7 +128,17 @@ portSTACK_TYPE *pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE
 	*pxTopOfStack = portNO_CRITICAL_NESTING;
 	pxTopOfStack--;
 
-	*pxTopOfStack = portNO_FLOATING_POINT_CONTEXT;
+	/* The task will start with a floating point context */ 
+	for (i = 0; i < steps; i++) { 
+		*pxTopOfStack = 0x0; 
+		pxTopOfStack--; 
+	} 
+
+	*pxTopOfStack = 0x0; 
+	pxTopOfStack--; 
+ 
+	/* Enable FPU */
+	*pxTopOfStack = pdTRUE; 
 
 	return pxTopOfStack;
 }

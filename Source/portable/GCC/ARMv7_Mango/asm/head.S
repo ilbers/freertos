@@ -126,6 +126,16 @@ start:
 	add	r0, r0, #4096
 	msr	sp_abt, r0
 
+	/* Enable FPU */
+	mrc	CPACR(r0)
+	orr	r0, r0, #(3 << 20)		/* Full access for cp10 */
+	orr	r0, r0, #(3 << 22)		/* Full access for cp11 */
+	bic	r0, r0, #(3 << 30)		
+	mcr	CPACR(r0)
+	isb
+	mov	r0, #(1 << 30)
+	vmsr	fpexc, r0
+
 	b	start_kernel
 
 ttb_flush:

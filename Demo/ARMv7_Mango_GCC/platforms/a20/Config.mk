@@ -15,5 +15,5 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place, Suite 330, Boston, MA  02111-1307  USA
 
-AFLAGS_PLATFORM := -mcpu=cortex-a7
-CFLAGS_PLATFORM := -mcpu=cortex-a7
+AFLAGS_PLATFORM := -march=armv7ve -mfpu=neon-vfpv4 -mfloat-abi=hard -mcpu=cortex-a7
+CFLAGS_PLATFORM := -march=armv7ve -mfpu=neon-vfpv4 -mfloat-abi=hard -mcpu=cortex-a7

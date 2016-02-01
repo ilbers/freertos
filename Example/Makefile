@@ -32,15 +32,14 @@ BUILD_DIR    = $(DEMO)/build
 include $(DEMO)/Config.mk
 include $(DEMO)/platforms/$(PLATFORM)/Config.mk
 
-CFLAGS = -O2 -mno-unaligned-access -marm				\
-         -mfpu=vfpv4 -g							\
+CFLAGS = -O2 -mno-unaligned-access -marm -g				\
          -I$(DEMO)/include						\
          -I$(RTOS_SOURCE)/include					\
          -I$(DEMO_INCLUDE)						\
          -I$(PORT)/include						\
          -I$(DEMO)/platforms/$(PLATFORM)/include
 
-AFLAGS = -mfpu=vfpv4 -marm						\
+AFLAGS = -marm								\
          -I $(PORT)/include
 
 # ------------------------------------------ #

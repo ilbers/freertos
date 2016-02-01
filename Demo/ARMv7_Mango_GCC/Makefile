@@ -36,15 +36,14 @@ PLATFORM_SOURCE = platforms/$(PLATFORM)/source
 
 BUILD_DIR = ./build
 
-CFLAGS = -O2 -mno-unaligned-access -marm				\
-         -mfpu=vfpv4 -g							\
+CFLAGS = -O2 -mno-unaligned-access -marm -g				\
          -I./include							\
          -I$(RTOS_SOURCE)/include					\
          -I$(DEMO_INCLUDE)						\
          -I$(PORT)/include						\
          -I./platforms/$(PLATFORM)/include
 
-AFLAGS = -mfpu=vfpv4 -marm						\
+AFLAGS = -marm								\
          -I $(PORT)/include
 
 OS_COMPONENTS := core.o app.o
