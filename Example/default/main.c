@@ -123,6 +123,8 @@ int main(void)
 	/* Setup lwIP stack */
 	tcpip_init(lwip_app_init, NULL);
 
+	sys_print_msg("Partition start time: %d mS\r\n", mango_partition_run_time());
+
 	sys_print_msg("Starting FreeRTOS scheduler\r\n");
 	vTaskStartScheduler();
 

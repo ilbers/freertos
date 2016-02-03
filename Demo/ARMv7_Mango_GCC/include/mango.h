@@ -29,6 +29,8 @@ uint32_t mango_dc_tx_free_space(uint32_t ch);
 uint32_t mango_dc_reset(uint32_t ch);
 
 uint32_t mango_get_partition_id(void);
+uint32_t mango_partition_reset(void);
+uint32_t mango_partition_run_time(void);
 
 uint32_t mango_watchdog_start(void);
 uint32_t mango_watchdog_stop(void);

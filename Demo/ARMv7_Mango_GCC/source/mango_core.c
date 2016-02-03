@@ -29,6 +29,7 @@
 
 #define MANGO_HVC_PARTITION_ID		0x20
 #define MANGO_HVC_PARTITION_RESET	0x21
+#define MANGO_HVC_PARTITION_RUN_TIME	0x22
 
 #define MANGO_HVC_WD_START		0x30
 #define MANGO_HVC_WD_STOP		0x31
@@ -178,6 +179,15 @@ uint32_t mango_partition_reset(void)
 	uint32_t ret;
 
 	ret = mango_hypervisor_call_0(MANGO_HVC_PARTITION_RESET);
+
+	return ret;
+}
+
+uint32_t mango_partition_run_time(void)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_0(MANGO_HVC_PARTITION_RUN_TIME);
 
 	return ret;
 }
