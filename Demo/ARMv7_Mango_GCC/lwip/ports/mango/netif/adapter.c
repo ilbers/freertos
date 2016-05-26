@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 ilbers GmbH
+ * Copyright (C) 2015-2016 ilbers GmbH
  *
  * Alexander Smirnov <asmirnov@ilbers.de>
  *
@@ -32,6 +32,7 @@
 
 #define MANGO_LWIP_NET_IRQ_NR	140		/* Network interface IRQ */
 #define MANGO_DEST_PARTITION	0		/* Partition ID to connect to */
+#define MANGO_NET_IFACE		0		/* Use Mango interface #0 */
 
 #define MANGO_MAX_FRAME_SIZE	1500
 
@@ -82,7 +83,7 @@ static void mango_net_irq(void)
 	for (;;)
 	{
 		/* get frame size */
-		size = mango_net_get_rx_size();
+		size = mango_net_get_rx_size(MANGO_NET_IFACE);
 		if (size == 0)
 		{
 			/* Buffer is empty */
@@ -93,7 +94,7 @@ static void mango_net_irq(void)
 		p = pbuf_alloc(PBUF_RAW, size, PBUF_POOL);
 
 		/* move received packet into a new pbuf */
-		ret = mango_net_rx(p->payload, size);
+		ret = mango_net_rx(MANGO_NET_IFACE, p->payload, size);
 		if (ret)
 		{
 			mango_print_msg("error: net RX failed, code (%d)\r\n", ret);
@@ -124,7 +125,7 @@ void mango_net_input_thread(void *netif)
 	register_irq_handler(MANGO_LWIP_NET_IRQ_NR, mango_net_irq);
 
 	/* Open Mango data channel */
-	ret = mango_net_open();
+	ret = mango_net_open(MANGO_NET_IFACE);
 	if (ret)
 	{
 		mango_print_msg("error: failed to open network interface%d\r\n");
@@ -191,7 +192,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 	}
 
 	/* send frame */
-	mango_net_tx(MANGO_DEST_PARTITION, buf, len);
+	mango_net_tx(MANGO_NET_IFACE, MANGO_DEST_PARTITION, buf, len);
 
 	return ERR_OK;
 }

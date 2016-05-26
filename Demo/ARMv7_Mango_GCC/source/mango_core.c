@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 ilbers GmbH
+ * Copyright (C) 2015-2016 ilbers GmbH
  *
  * Alexander Smirnov <asmirnov@ilbers.de>
  *
@@ -20,6 +20,8 @@
 #include <stdint.h>
 
 /* Mango hypercall identifiers, should be the same as in Mango core */
+#define MANGO_HVC_AUTH			0x01
+
 #define MANGO_HVC_DC_OPEN		0x10
 #define MANGO_HVC_DC_WRITE		0x11
 #define MANGO_HVC_DC_READ		0x12
@@ -45,7 +47,8 @@
 #define MANGO_HVC_NET_TX		0x63
 #define MANGO_HVC_NET_RX		0x64
 #define MANGO_HVC_NET_CLOSE		0x65
-#define MANGO_HVC_RX_SIZE		0x66
+#define MANGO_HVC_NET_RX_SIZE		0x66
+#define MANGO_HVC_NET_RESET		0x67
 
 #define mango_hypervisor_call_0(nr)					\
 ({									\
@@ -97,10 +100,37 @@
 	_ret;								\
 })
 
+#define mango_hypervisor_call_4(nr, arg1, arg2, arg3, arg4)		\
+({									\
+	register uint32_t _ret;						\
+	asm volatile ("mov	r0, %2\r\n"				\
+		      "mov	r1, %3\r\n"				\
+		      "mov	r2, %4\r\n"				\
+		      "mov	r3, %5\r\n"				\
+		      "hvc	%1\r\n"					\
+		      "mov	%0, r0\r\n"				\
+		      : "=r"(_ret)					\
+		      : "I" (nr), "r" (arg1), "r" (arg2), "r" (arg3),	\
+			"r" (arg4)					\
+		      : "cc");						\
+	_ret;								\
+})
+
+/***********************************/
+/*         Mango Core API          */
+/***********************************/
+uint32_t mango_unlock(unsigned char *token)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_1(MANGO_HVC_AUTH, token);
+
+	return ret;
+}
+
 /***********************************/
 /*     Mango Data Channel API      */
 /***********************************/
-
 uint32_t mango_dc_open(uint32_t ch, uint32_t dest)
 {
 	uint32_t ret;
@@ -164,7 +194,6 @@ uint32_t mango_dc_reset(uint32_t ch)
 /*******************************************/
 /*     Mango Partition Management API      */
 /*******************************************/
-
 uint32_t mango_get_partition_id(void)
 {
 	uint32_t ret;
@@ -204,15 +233,6 @@ uint32_t mango_watchdog_start(void)
 	return ret;
 }
 
-uint32_t mango_watchdog_stop(void)
-{
-	uint32_t ret;
-
-	ret = mango_hypervisor_call_0(MANGO_HVC_WD_STOP);
-
-	return ret;
-}
-
 uint32_t mango_watchdog_ping(void)
 {
 	uint32_t ret;
@@ -246,7 +266,6 @@ uint32_t mango_console_write(uint8_t *buff, uint32_t size)
 /*******************************/
 /*      Mango debug API        */
 /*******************************/
-
 uint32_t mango_debug_call(uint32_t code)
 {
 	uint32_t ret;
@@ -259,21 +278,21 @@ uint32_t mango_debug_call(uint32_t code)
 /*********************************/
 /*     Mango Networking API      */
 /*********************************/
-
-uint32_t mango_net_open(void)
+uint32_t mango_net_open(uint32_t iface)
 {
 	uint32_t ret;
 
-	ret = mango_hypervisor_call_0(MANGO_HVC_NET_OPEN);
+	ret = mango_hypervisor_call_1(MANGO_HVC_NET_OPEN, iface);
 
 	return ret;
 }
 
-uint32_t mango_net_tx(uint32_t dest, const uint8_t *p, uint32_t len)
+uint32_t mango_net_tx(uint32_t iface, uint32_t dest, const uint8_t *p, uint32_t len)
 {
 	uint32_t ret;
 
-	ret =  mango_hypervisor_call_3(MANGO_HVC_NET_TX,
+	ret =  mango_hypervisor_call_4(MANGO_HVC_NET_TX,
+				       iface,
 				       dest,
 				       (uint32_t)p,
 				       len);
@@ -281,40 +300,50 @@ uint32_t mango_net_tx(uint32_t dest, const uint8_t *p, uint32_t len)
 	return ret;
 }
 
-uint32_t mango_net_rx(uint8_t *p, uint32_t len)
+uint32_t mango_net_rx(uint32_t iface, uint8_t *p, uint32_t len)
 {
 	uint32_t ret;
 
-	ret =  mango_hypervisor_call_2(MANGO_HVC_NET_RX,
+	ret =  mango_hypervisor_call_3(MANGO_HVC_NET_RX,
+				       iface,
 				       (uint32_t)p,
 				       len);
 
 	return ret;
 }
 
-uint32_t mango_net_close(void)
+uint32_t mango_net_close(uint32_t iface)
 {
 	uint32_t ret;
 
-	ret = mango_hypervisor_call_0(MANGO_HVC_NET_CLOSE);
+	ret = mango_hypervisor_call_1(MANGO_HVC_NET_CLOSE, iface);
 
 	return ret;
 }
 
-uint32_t mango_net_set_mode(uint32_t mode)
+uint32_t mango_net_set_mode(uint32_t iface, uint32_t mode)
 {
 	uint32_t ret;
 
-	ret = mango_hypervisor_call_1(MANGO_HVC_NET_SET_MODE, mode);
+	ret = mango_hypervisor_call_2(MANGO_HVC_NET_SET_MODE, iface, mode);
 
 	return ret;
 }
 
-uint32_t mango_net_get_rx_size(void)
+uint32_t mango_net_get_rx_size(uint32_t iface)
 {
 	uint32_t ret;
 
-	ret = mango_hypervisor_call_0(MANGO_HVC_RX_SIZE);
+	ret = mango_hypervisor_call_1(MANGO_HVC_NET_RX_SIZE, iface);
+
+	return ret;
+}
+
+uint32_t mango_net_reset(uint32_t iface)
+{
+	uint32_t ret;
+
+	ret = mango_hypervisor_call_1(MANGO_HVC_NET_RESET, iface);
 
 	return ret;
 }
