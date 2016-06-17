@@ -85,61 +85,16 @@ core.o: $(CORE_OBJS)
 app.o:
 	@make -C $(APPLICATION)
 
-# ------------------------------------------ #
-#               CONFIG_NET_LWIP              #
-# ------------------------------------------ #
+#########################################################################
+#                         LwIP stack objects                            #
+#########################################################################
 ifneq (,$(findstring CONFIG_NET_LWIP, $(DCONFIG)))
-
-CFLAGS +=				\
-         -I$(LWIP)/src/include		\
-         -I$(LWIP)/src/include/ipv4	\
-         -I$(LWIP)/ports/mango/include
-
-#########################################################################
-#                            lwIP objects                              #
-#########################################################################
-LWIP_SRCS = $(LWIP)/src/core/init.c					\
-            $(LWIP)/src/core/def.c					\
-            $(LWIP)/src/core/dhcp.c					\
-            $(LWIP)/src/core/mem.c					\
-            $(LWIP)/src/core/memp.c					\
-            $(LWIP)/src/core/netif.c					\
-            $(LWIP)/src/core/pbuf.c					\
-            $(LWIP)/src/core/stats.c					\
-            $(LWIP)/src/core/sys.c					\
-            $(LWIP)/src/core/udp.c					\
-            $(LWIP)/src/core/tcp.c					\
-            $(LWIP)/src/core/tcp_in.c					\
-            $(LWIP)/src/core/tcp_out.c					\
-            $(LWIP)/src/core/ipv4/icmp.c				\
-            $(LWIP)/src/core/ipv4/ip.c					\
-            $(LWIP)/src/core/ipv4/ip_addr.c				\
-            $(LWIP)/src/core/ipv4/inet_chksum.c				\
-            $(LWIP)/src/core/ipv4/ip_frag.c				\
-            $(LWIP)/src/core/lwip_timers.c				\
-            $(LWIP)/src/api/sockets.c					\
-            $(LWIP)/src/api/tcpip.c					\
-            $(LWIP)/src/api/api_lib.c					\
-            $(LWIP)/src/api/api_msg.c					\
-            $(LWIP)/src/api/netbuf.c					\
-            $(LWIP)/src/netif/etharp.c					\
-            $(LWIP)/ports/mango/netif/adapter.c				\
-            $(LWIP)/ports/mango/netif/pqueue.c				\
-            $(LWIP)/ports/mango/sys_arch.c
-
-LWIP_OBJS := $(LWIP_SRCS:.c=.o)
-LWIP_OBJS := $(LWIP_OBJS:.S=.o)
 
 OS_COMPONENTS += lwip.o
 
-lwip.o: $(LWIP_OBJS)
-	@-rm -rf $(BUILD_DIR)/lwip
-	@-mkdir -p $(BUILD_DIR)/lwip
-	@-mv $(BUILD_DIR)/*.o $(BUILD_DIR)/lwip
-	@echo [LD] lwip/built_in.o
-	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/lwip/built_in.o $(BUILD_DIR)/lwip/*.o
+lwip.o:
+	@make -C $(LWIP)
 
-#########################################################################
 endif
 
 %.o: %.S

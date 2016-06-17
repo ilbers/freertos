@@ -69,11 +69,11 @@ app.o: $(APP_OBJS)
 	@$(LD) $(LDFLAGS) -r -o $(BUILD_DIR)/app/built_in.o $(BUILD_DIR)/app/*.o
 
 %.o: %.S
-	@echo [AS] $@
+	@echo [AS] app/$@
 	@$(CC) $(AFLAGS) $(AFLAGS_PLATFORM) -c $< -o $@
 	@mv $@ $(BUILD_DIR)
 
 %.o: %.c
-	@echo [CC] $@
+	@echo [CC] app/$@
 	@$(CC) $(CFLAGS) $(CFLAGS_EXTRA) $(CFLAGS_PLATFORM) -c $< -o $@
 	@mv $@ $(BUILD_DIR)

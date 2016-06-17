@@ -31,7 +31,7 @@ static void print_banner()
 	sys_print_msg("\r\n");
 	sys_print_msg(" *******************************************\r\n");
 	sys_print_msg(" **       Welcome to LotOS framework      **\r\n");
-	sys_print_msg(" **     Copyright (C) 2015 ilbers GmbH    **\r\n");
+	sys_print_msg(" **  Copyright (C) 2015-2016 ilbers GmbH  **\r\n");
 	sys_print_msg(" **                                       **\r\n");
 	sys_print_msg(" **         starting FreeRTOS             **\r\n");
 	sys_print_msg(" *******************************************\r\n");
