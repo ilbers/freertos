@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 ilbers GmbH
+ * Copyright (C) 2015-2016 ilbers GmbH
  *
  * Alexander Smirnov <asmirnov@ilbers.de>
  *
@@ -23,6 +23,8 @@
 #include <io.h>
 #include <mm.h>
 #include <sys_print.h>
+
+#include <platform/config.h>
 
 #define L3_POOL_SIZE	32
 
@@ -474,6 +476,18 @@ void flush_bss()
 	}
 }
 
+void map_freertos_ram(void)
+{
+	uint32_t base = FREERTOS_RAM_START + MEM_BLOCK_2MB;
+	uint32_t size = MEM_BLOCK_2MB;
+
+	/* FreeRTOS entry code maps the first 2MB block only,
+	 * so if the whole system exceeds this size, data abort
+	 * can occure. So this code maps extra 2MB block.
+	 */
+	map_memory_region(base, base, size, MEM_NORMAL);
+}
+
 void mm_init()
 {
 	int i, j;
@@ -492,6 +506,8 @@ void mm_init()
 	}
 
 	va_pa_offset = 0;
+
+	map_freertos_ram();
 
 	flush_caches();
 	tlb_invalidate_all();
