@@ -21,6 +21,7 @@
 #define __SYS_PRINT_H__
 
 #include <stdint.h>
+#include <stdarg.h>
 
 #define PRINT_BUFF_SIZE		1024
 
@@ -36,6 +37,15 @@ void uart_init(void);
 int32_t uart_tx(const char *buff, uint32_t len);
 int32_t uart_rx(char *buff, uint32_t len);
 void register_uart_driver(uart_driver_t *drv);
+
+/* Main formatting routine */
+int format_print_message(char *buff,
+			 int buff_size,
+			 const char *fmt,
+			 va_list argp);
+uint32_t sys_print_to_str(char *buff,
+			  int buff_size,
+			  const char *fmt, ...);
 
 /* Main output routine */
 uint32_t sys_print_msg(const char *fmt, ...);

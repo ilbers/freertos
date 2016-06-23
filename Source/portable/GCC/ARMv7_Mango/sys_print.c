@@ -17,13 +17,14 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdint.h>
-#include <stdarg.h>
-#include <mango.h>
 #include <sys_print.h>
+#include <mango.h>
 #include <portmacro.h>
 
-static int format_print_message(char *buff, const char *fmt, va_list argp)
+int format_print_message(char *buff,
+			 int buff_size,
+			 const char *fmt,
+			 va_list argp)
 {
 	int d;
 	char c;
@@ -39,7 +40,7 @@ static int format_print_message(char *buff, const char *fmt, va_list argp)
 
 	s = buff;
 
-	while ((c = *fmt++) != 0)
+	while (((c = *fmt++) != 0) && (len < buff_size))
 	{
 		unsigned int fill = 0;
 		unsigned int count = 0;
@@ -146,7 +147,7 @@ static int format_print_message(char *buff, const char *fmt, va_list argp)
 				*--s = '-';
 			}
 
-			while (*s != 0)
+			while ((*s != 0) && (len < buff_size))
 			{
 				buff[len++] = *s++;
 			}
@@ -168,7 +169,10 @@ static int format_print_message(char *buff, const char *fmt, va_list argp)
 
 				default:
 					buff[len++] = '/';
-					break;
+					if (len == buff_size)
+					{
+						return len;
+					}
 				}
 			}
 
@@ -186,7 +190,7 @@ uint32_t sys_print_msg(const char *fmt, ...)
 	int len;
 
 	va_start(args,fmt);
-	len = format_print_message(buff, fmt, args);
+	len = format_print_message(buff, PRINT_BUFF_SIZE - 1, fmt, args);
 	va_end(args);
 
 	buff[len] = 0;
@@ -205,14 +209,29 @@ uint32_t mango_print_msg(const char *fmt, ...)
 	int len;
 
 	va_start(args,fmt);
-	len = format_print_message(buff, fmt, args);
+	len = format_print_message(buff, PRINT_BUFF_SIZE - 1, fmt, args);
 	va_end(args);
 
 	buff[len] = 0;
 
-	portENTER_CRITICAL();
+	/* Hypervisor call doesn't require race protection */
 	mango_console_write((uint8_t *)buff, len);
-	portEXIT_CRITICAL();
+
+	return len;
+}
+
+uint32_t sys_print_to_str(char *buff,
+			  int buff_size,
+			  const char *fmt, ...)
+{
+	va_list args;
+	int len;
+
+	va_start(args,fmt);
+	len = format_print_message(buff, buff_size - 1, fmt, args);
+	va_end(args);
+
+	buff[len] = 0;
 
 	return len;
 }
