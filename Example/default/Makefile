@@ -28,3 +28,10 @@ APP_SRCS = $(APPLICATION)/main.c	\
 ifneq (,$(findstring CONFIG_NET_LWIP, $(DCONFIG)))
   APP_SRCS += $(APPLICATION)/network.c
 endif
+
+# ------------------------------------------ #
+#                CONFIG_FB_PTK               #
+# ------------------------------------------ #
+ifneq (,$(findstring CONFIG_FB_PTK, $(DCONFIG)))
+  APP_SRCS += $(APPLICATION)/fb.c
+endif

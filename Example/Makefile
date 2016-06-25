@@ -54,6 +54,15 @@ ifneq (,$(findstring CONFIG_NET_LWIP, $(DCONFIG)))
            -I$(LWIP)/ports/mango/include
 endif
 
+# ------------------------------------------ #
+#                CONFIG_FB_PTK               #
+# ------------------------------------------ #
+ifneq (,$(findstring CONFIG_FB_PTK, $(DCONFIG)))
+  PTK = $(DEMO)/ptk
+
+  CFLAGS += -I$(PTK)/source
+endif
+
 # Include demo scenario
 include $(APPLICATION)/Makefile
 

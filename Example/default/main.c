@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 ilbers GmbH
+ * Copyright (C) 2015-2016 ilbers GmbH
  *
  * Alexander Smirnov <asmirnov@ilbers.de>
  *
@@ -23,11 +23,14 @@
 #include <sys_print.h>
 #include <task.h>
 
-#include <lwip/tcpip.h>
+#ifdef CONFIG_NET_LWIP
+  #include <lwip/tcpip.h>
+#endif
 
 extern void dcTask(void *unused);
 extern void networkTask(void *unused);
 extern void lwip_app_init(void *args);
+extern void fbTask(void *unused);
 
 void watchdogTask(void *unused)
 {
@@ -94,19 +97,6 @@ int main(void)
 		return 1;
 	}
 
-	/* Start network application */
-	ret = xTaskCreate(networkTask,
-			  (portCHAR *) "networkTask",
-			  4096,
-			  NULL,
-			  configTIMER_TASK_PRIORITY - 1,
-			  NULL);
-	if (ret != pdPASS)
-	{
-		sys_print_msg("Error creating network task, code (%d)\r\n", ret);
-		return 1;
-	}
-
 	/* Start data-channel application */
 	ret = xTaskCreate(dcTask,
 			  (portCHAR *) "dcTask",
@@ -120,8 +110,38 @@ int main(void)
 		return 1;
 	}
 
+#ifdef CONFIG_FB_PTK
+	/* Start framebuffer application */
+	ret = xTaskCreate(fbTask,
+			  (portCHAR *) "fbTask",
+			  4096,
+			  NULL,
+			  configTIMER_TASK_PRIORITY - 1,
+			  NULL);
+	if (ret != pdPASS)
+	{
+		sys_print_msg("Error creating framebuffer task, code (%d)\r\n", ret);
+		return 1;
+	}
+#endif /* CONFIG_FB_PTK */
+
+#ifdef CONFIG_NET_LWIP
+	/* Start network application */
+	ret = xTaskCreate(networkTask,
+			  (portCHAR *) "networkTask",
+			  4096,
+			  NULL,
+			  configTIMER_TASK_PRIORITY - 1,
+			  NULL);
+	if (ret != pdPASS)
+	{
+		sys_print_msg("Error creating network task, code (%d)\r\n", ret);
+		return 1;
+	}
+
 	/* Setup lwIP stack */
 	tcpip_init(lwip_app_init, NULL);
+#endif /* CONFIG_NET_LWIP */
 
 	/*   Unlock Mango API:
 	 * the default passphrase for this evaluation kit is "bananapi"

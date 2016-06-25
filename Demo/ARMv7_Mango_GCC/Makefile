@@ -33,6 +33,7 @@ PORT            = $(RTOS_SOURCE)/portable/GCC/ARMv7_Mango
 APPLICATION     = ../../Example
 LWIP            = lwip
 PLATFORM_SOURCE = platforms/$(PLATFORM)/source
+PTK             = ptk
 
 BUILD_DIR = ./build
 
@@ -94,6 +95,18 @@ OS_COMPONENTS += lwip.o
 
 lwip.o:
 	@make -C $(LWIP)
+
+endif
+
+#########################################################################
+#                           picoTK objects                              #
+#########################################################################
+ifneq (,$(findstring CONFIG_FB_PTK, $(DCONFIG)))
+
+OS_COMPONENTS += ptk.o
+
+ptk.o:
+	@make -C $(PTK)
 
 endif
 

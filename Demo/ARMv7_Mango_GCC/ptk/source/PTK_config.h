@@ -1,7 +1,9 @@
 /*
  * Copyright (C) 2015-2016 ilbers GmbH
- *
  * Alexander Smirnov <asmirnov@ilbers.de>
+ *
+ * Based on picoTK
+ * Copyright (C) Thomas Gallenkamp <tgkamp@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License (version 2) as published
@@ -17,21 +19,13 @@
  * Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __A20_PLATFORM_CONFIG_H__
-#define __A20_PLATFORM_CONFIG_H__
+#ifndef __PTK_CONFIG_H__
+#define __PTK_CONFIG_H__
 
-#define FREERTOS_RAM_START			0x40000000	/* FreeRTOS RAM base address */
-#define FREERTOS_RAM_SIZE			0x01000000	/* RAM size for FreeRTOS */
+/* Current configuration emulates VESA BIOS SVGA mode 0x301 */
 
-/* A20 settings */
-#define GIC_DIST_BASE				0x01c81000
-#define GIC_CPU_BASE				0x01c82000
-#define NR_CPU_SPIS				128		/* Shared peripheral interrupts */
+/* Mango framebuffer size */
+#define FB_SIZE_X	640
+#define FB_SIZE_Y	480
 
-#define configFPU_NUM_REGISTERS			32
-#define configFPU_BYTES_PER_REGISTER		8
-
-/* Mango Hypervisor configuration */
-#define MANGOFB_BASE_ADDR			0x20000000	/* MangoFB base address */
-
-#endif /* __A20_PLATFORM_CONFIG_H__ */
+#endif /* __PTK_CONFIG_H__ */
