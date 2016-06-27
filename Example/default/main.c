@@ -57,7 +57,8 @@ void counterTask(void *unused)
 
 	for (;;)
 	{
-		mango_print_msg("Run time: %d seconds\r", count++);
+		count = mango_partition_run_time() / 1000;
+		mango_print_msg("Run time: %d seconds\r", count);
 
 		vTaskDelay(configTICK_RATE_HZ);
 	}

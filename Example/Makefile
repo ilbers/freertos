@@ -37,7 +37,8 @@ CFLAGS = -O2 -mno-unaligned-access -marm -g				\
          -I$(RTOS_SOURCE)/include					\
          -I$(DEMO_INCLUDE)						\
          -I$(PORT)/include						\
-         -I$(DEMO)/platforms/$(PLATFORM)/include
+         -I$(DEMO)/platforms/$(PLATFORM)/include			\
+         $(DCONFIG)
 
 AFLAGS = -marm								\
          -I $(PORT)/include

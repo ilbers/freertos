@@ -29,6 +29,11 @@
 #include "fb_text.h"
 #include "fb_pixmap.h"
 
+/* Pre-calculated Sin(x) table */
+static float sine_table[63];
+
+extern float sineX(float x);
+
 static void demo_colors()
 {
 	struct picoGC gc;
@@ -60,7 +65,7 @@ static void demo_colors()
 		}
 	}
 
-	vTaskDelay(configTICK_RATE_HZ * 20);
+	vTaskDelay(configTICK_RATE_HZ * 10);
 	picoSetForeground(&gc, 0);
 	picoFillRect(&gc, 321, 0, 319, 334);
 	picoSetForeground(&gc, 7);
@@ -79,7 +84,7 @@ static void demo_time(void)
 
 	picoSetFont(&gc,&font_helv_b34);
 
-	for (i = 0; i < 20; i++)
+	for (i = 0; i < 10; i++)
 	{
 		volatile int t = mango_partition_run_time() / 1000;
 		char buf[10];
@@ -109,16 +114,61 @@ static void demo_time(void)
 	}
 
 	picoSetForeground(&gc, 0);
-	picoFillRect(&gc, 400, 165, 200, 100);
+	picoFillRect(&gc, 350, 165, 250, 200);
+	picoSetForeground(&gc, 7);
+}
+
+static void demo_sine(void)
+{
+	struct picoGC gc;
+	int i;
+
+	picoSetForeground(&gc, 15);
+	picoSetFont(&gc, &font_helv_m20);
+	picoDrawTextCentered(&gc, 480, 312, "Demo: sin(x)");
+	picoSetFont(&gc, &font_8x13);
+
+	picoDrawRect(&gc, 330, 100, 300, 100);
+
+	for (i = 290; i < 2000; i++)
+	{
+		int x;
+		float y1, y2;
+
+		x = 625;
+		y1 = 130 + sine_table[i % 63] * 10;
+		y2 = 170 + sine_table[(i * 2) % 63] * 4;
+
+		picoScrollX(&gc, 335 + 1, 120, 291, 20, 1);
+		picoScrollX(&gc, 335 + 1, 165, 291, 10, 1);
+
+		picoSetForeground(&gc, 2);
+		picoDrawPoint(&gc, x, y1);
+		picoSetForeground(&gc, 4);
+		picoDrawPoint(&gc, x, y2);
+
+		vTaskDelay(configTICK_RATE_HZ / 200);
+	}
+
+	picoSetForeground(&gc, 0);
+	picoFillRect(&gc, 330, 100, 300, 100);
 	picoSetForeground(&gc, 7);
 }
 
 static void fbTask2(void *unused)
 {
+	int i;
+
+	for (i = 0; i < 63; i++)
+	{
+		sine_table[i] = sineX((float)i / 10);
+	}
+
 	while (1)
 	{
 		demo_colors();
 		demo_time();
+		demo_sine();
 	}
 }
 

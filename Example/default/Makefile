@@ -34,4 +34,5 @@ endif
 # ------------------------------------------ #
 ifneq (,$(findstring CONFIG_FB_PTK, $(DCONFIG)))
   APP_SRCS += $(APPLICATION)/fb.c
+  APP_SRCS += $(APPLICATION)/math.c
 endif
