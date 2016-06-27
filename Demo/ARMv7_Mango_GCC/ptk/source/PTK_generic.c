@@ -367,14 +367,24 @@ void picoReverseRect(struct picoGC *gc, int x, int y, int w, int h)
 	picoReverseRectRaw(x, y, w, h);
 }
 
-void picoScroll(struct picoGC *gc, int x, int y, int w, int h, int delta)
+void picoScrollX(struct picoGC *gc, int x, int y, int w, int h, int delta)
 {
 	if (gc == NULL)
 	{
 		gc = &picoDefaultGC;
 	}
 
-	picoScrollRaw(x, y, w, h, delta, gc->background);
+	picoScrollXRaw(x, y, w, h, delta, gc->background);
+}
+
+void picoScrollY(struct picoGC *gc, int x, int y, int w, int h, int delta)
+{
+	if (gc == NULL)
+	{
+		gc = &picoDefaultGC;
+	}
+
+	picoScrollYRaw(x, y, w, h, delta, gc->background);
 }
 
 
@@ -554,7 +564,7 @@ void picoTerminalPutc(struct picoTerminal *term, int ch)
 
 	if (term->cursor_y >= term->hc)
 	{
-		picoScroll(&term->gc, term->x, term->y, term->w, term->h, term->ch);
+		picoScrollY(&term->gc, term->x, term->y, term->w, term->h, term->ch);
 		term->cursor_y--;
 	}
 }

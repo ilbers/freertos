@@ -22,9 +22,13 @@
 #ifndef PTK_H
 #define PTK_H
 
+#include <stdint.h>
+
 #ifndef NULL
   #define NULL ((void *)0)
 #endif /* NULL */
+
+#define PTK_NO_COLOR	(-1)	/* Do no fill background */
 
 /* picoTK uses graphic contexts (GC) to allow multiple tasks to have
  * their own environment. Most of the picoTK functions required to
@@ -110,7 +114,8 @@ int  picoDrawTextRaw(int x, int y, char *txt,struct picoFont *font,
                      int fgcolor, int bgcolor);
 int  picoDrawPixmapRaw (int x, int y, struct picoPixmap *pixmap,
                         unsigned char fgc, unsigned char bgc);
-int  picoScrollRaw(int x, int y, int w, int h, int delta,int bgc);
+void  picoScrollXRaw(int x, int y, int w, int h, int delta,int bgc);
+void  picoScrollYRaw(int x, int y, int w, int h, int delta,int bgc);
 
 /* Generic API: */
 
@@ -192,7 +197,8 @@ void picoReverseRect(struct picoGC *gc,int x, int y, int w, int h);
  * pixels. If delta is positive the area is scrolled up, elsewise it is
  * scrolled down 
  */
-void picoScroll(struct picoGC *gc, int x, int y, int w, int h, int delta);
+void picoScrollX(struct picoGC *gc, int x, int y, int w, int h, int delta);
+void picoScrollY(struct picoGC *gc, int x, int y, int w, int h, int delta);
 
 /* picoSetFont() sets font for given graphical context gc */
 void picoSetFont(struct picoGC *gc, struct picoFont *font);

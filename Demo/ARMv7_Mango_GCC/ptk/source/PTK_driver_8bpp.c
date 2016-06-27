@@ -197,7 +197,37 @@ int picoDrawTextRaw(int x, int y,
 	return x - x_orig;
 }
 
-int picoScrollRaw(int x, int y, int w, int h, int delta, int bgc)
+void picoScrollXRaw(int x, int y, int w, int h, int delta, int bgc)
+{
+	volatile uint8_t *src;
+	volatile uint8_t *dst;
+	int xi, yi;
+
+	if (delta > 0)
+	{
+
+		for (xi = 0; xi < w; xi++)
+		{
+			for (yi = 0; yi < h; yi++)
+			{
+				src = fbuf + (y + yi) * PICO_TOTAL_X + x + xi;
+				dst = src - delta;
+				*dst = *src;
+			}
+		}
+
+		if (bgc != PTK_NO_COLOR)
+		{
+			/* TODO */
+		}
+	}
+	else
+	{
+		/* TODO */
+	}
+}
+
+void picoScrollYRaw(int x, int y, int w, int h, int delta, int bgc)
 {
 	unsigned char *src;
 	unsigned char *dst;
@@ -221,14 +251,17 @@ int picoScrollRaw(int x, int y, int w, int h, int delta, int bgc)
 			src += PICO_TOTAL_X;
 		}
 
-		for (; yi < h; yi++)
+		if (bgc != PTK_NO_COLOR)
 		{
-			for (xi = x; xi <= xt; xi++)
+			for (; yi < h; yi++)
 			{
-				dst[xi] = bgc;
-			}
+				for (xi = x; xi <= xt; xi++)
+				{
+					dst[xi] = bgc;
+				}
 
-			dst += PICO_TOTAL_X;
+				dst += PICO_TOTAL_X;
+			}
 		}
 	}
 	else
@@ -248,14 +281,17 @@ int picoScrollRaw(int x, int y, int w, int h, int delta, int bgc)
 			src += PICO_TOTAL_X / 2;
 		}
 
-		for (; yi <= 0; yi--)
+		if (bgc != PTK_NO_COLOR)
 		{
-			for (xi = x; xi <= xt; xi++)
+			for (; yi <= 0; yi--)
 			{
-				dst[xi] = bgc;
-			}
+				for (xi = x; xi <= xt; xi++)
+				{
+					dst[xi] = bgc;
+				}
 
-			dst += PICO_TOTAL_X / 2;
+				dst += PICO_TOTAL_X / 2;
+			}
 		}
 	}
 }
