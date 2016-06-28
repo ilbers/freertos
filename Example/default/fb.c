@@ -28,9 +28,12 @@
 
 #include "fb_text.h"
 #include "fb_pixmap.h"
+#include "rb.h"
 
 /* Pre-calculated Sin(x) table */
 static float sine_table[63];
+
+static rb_t sine1, sine2, sine3, sine4, sine5, sine6;
 
 extern float sineX(float x);
 
@@ -118,6 +121,26 @@ static void demo_time(void)
 	picoSetForeground(&gc, 7);
 }
 
+static void draw_sine(rb_t *rb, int x, int y, int color)
+{
+	struct picoGC gc;
+	int size = sizeof(rb->data) / sizeof(int);
+	int i;
+
+	picoSetForeground(&gc, 0);
+	picoDrawPoint(&gc, x, y + rb->data[rb->head]);
+
+	for (i = 1; i < rb->count; i++)
+	{
+		int p = (rb->head + i) % size;
+
+		picoSetForeground(&gc, 0);
+		picoDrawPoint(&gc, x + i, y + rb->data[p]);
+		picoSetForeground(&gc, color);
+		picoDrawPoint(&gc, x + i - 1, y + rb->data[p]);
+	}
+}
+
 static void demo_sine(void)
 {
 	struct picoGC gc;
@@ -128,30 +151,47 @@ static void demo_sine(void)
 	picoDrawTextCentered(&gc, 480, 312, "Demo: sin(x)");
 	picoSetFont(&gc, &font_8x13);
 
-	picoDrawRect(&gc, 330, 100, 300, 100);
+	picoDrawRect(&gc, 330, 100, 300, 130);
 
-	for (i = 290; i < 2000; i++)
+	/* Flush sine buffers */
+	rb_init(&sine1);
+	rb_init(&sine2);
+	rb_init(&sine3);
+	rb_init(&sine4);
+	rb_init(&sine5);
+	rb_init(&sine6);
+
+	for (i = 0; i < 1500; i++)
 	{
-		int x;
-		float y1, y2;
+		/* Y = 110 +/- 2 */
+		rb_push(&sine1, sine_table[(i * 5) % 63] * 2);
+		draw_sine(&sine1, 335, 110, 1);
 
-		x = 625;
-		y1 = 130 + sine_table[i % 63] * 10;
-		y2 = 170 + sine_table[(i * 2) % 63] * 4;
+		/* Y = 124 +/- 4 */
+		rb_push(&sine2, sine_table[(i * 5) % 63] * 4);
+		draw_sine(&sine2, 335, 124, 2);
 
-		picoScrollX(&gc, 335 + 1, 120, 291, 20, 1);
-		picoScrollX(&gc, 335 + 1, 165, 291, 10, 1);
+		/* Y = 140 +/- 5 */
+		rb_push(&sine3, sine_table[(i * 2) % 63] * 5);
+		draw_sine(&sine3, 335, 140, 3);
 
-		picoSetForeground(&gc, 2);
-		picoDrawPoint(&gc, x, y1);
-		picoSetForeground(&gc, 4);
-		picoDrawPoint(&gc, x, y2);
+		/* Y = 160 +/- 7 */
+		rb_push(&sine4, sine_table[(i * 3) % 63] * 7);
+		draw_sine(&sine4, 335, 160, 4);
 
-		vTaskDelay(configTICK_RATE_HZ / 200);
+		/* Y = 185 +/- 9 */
+		rb_push(&sine5, sine_table[i % 63] * 9);
+		draw_sine(&sine5, 335, 185, 5);
+
+		/* Y = 210 +/- 10 */
+		rb_push(&sine6, sine_table[(i * 2) % 63] * 10);
+		draw_sine(&sine6, 335, 210, 6);
+
+		vTaskDelay(configTICK_RATE_HZ / 100);
 	}
 
 	picoSetForeground(&gc, 0);
-	picoFillRect(&gc, 330, 100, 300, 100);
+	picoFillRect(&gc, 330, 100, 300, 150);
 	picoSetForeground(&gc, 7);
 }
 
@@ -159,6 +199,7 @@ static void fbTask2(void *unused)
 {
 	int i;
 
+	/* Build sine table */
 	for (i = 0; i < 63; i++)
 	{
 		sine_table[i] = sineX((float)i / 10);
