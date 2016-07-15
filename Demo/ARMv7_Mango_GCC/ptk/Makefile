@@ -56,6 +56,7 @@ FONT_SRCS = fonts/10x20.c	\
 
 PTK_SRCS = source/PTK_generic.c     \
            source/PTK_driver_8bpp.c \
+           source/PTK_widget.c \
 
 PTK_OBJS := $(PTK_SRCS:.c=.o)
 PTK_OBJS += $(FONT_SRCS:.c=.o)

@@ -82,9 +82,34 @@ struct picoTerminal {
 	int           esc_state;	/* used for escape seq handling */
 	char          esc_buf[5];
 	int           esc_len;
+	int           term_widget;
+	int           cmdline_widget;
+};
+
+#define PICO_WG_ALLOCATED	(1 << 0)	/* Widget is allocated */
+
+struct picoWidget {
+	int flags;				/* Flags to indicate widget state */
+	int x;					/* Top left corner X pos */
+	int y;					/* Top left corner Y pos */
+	int width;				/* Width of widget in pixels */
+	int height;				/* Height of widget in pixels */
+	int rcount;				/* Widget refresh counter */
+};
+
+struct picoControlBlock {
+	int               magic;		/* MangoFB magic signature */
+	int               screen_x;		/* Screen X resolution */
+	int               screen_y;		/* Screen Y resolution */
+	int               colors;		/* Bits per pixel */
+	int               data_offset;		/* Raw FB data offset */
+	int               max_nr_widgets;	/* Max nr widgets supported */
+	int               nr_widgets;		/* Nr widgets allocated */
+	struct picoWidget widgets[1];		/* Widgets data */
 };
 
 extern unsigned char *fbuf;
+extern struct picoControlBlock *cb;
 
 extern struct picoFont font_10x20;
 extern struct picoFont font_9x15;
@@ -248,6 +273,18 @@ int picoInfoSizeY(void);
 
 /* returns display color depth */
 int picoInfoColorDepth(void);
+
+/* Widgets API is used to optimize virtual framebuffer displaying.
+ * The only specified parts of the screen will be refreshed, so
+ * the overall CPU loading is reduced
+ */
+
+/* picoCreateWidget() allocates new widget */
+int picoCreateWidget(int x, int y, int h, int w);
+/* picoUpdateWidget() updates widget's refresh counter */
+void picoUpdateWidget(int nr);
+/* picoRemoveWidget() removes widget */
+void picoRemoveWidget(int nr);
 
 #endif
 

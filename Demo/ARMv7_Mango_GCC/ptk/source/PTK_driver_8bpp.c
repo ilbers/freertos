@@ -23,9 +23,8 @@
 #include "PTK.h"
 #include "PTK_config.h"
 
-#define PICO_X		FB_SIZE_X
-#define PICO_Y		FB_SIZE_Y
-#define PICO_TOTAL_X	PICO_X
+#define PICO_X		(cb->screen_x)
+#define PICO_Y		(cb->screen_y)
 
 inline int picoInfoSizeX(void)
 {
@@ -44,7 +43,7 @@ inline int picoInfoColorDepth(void)
 
 inline void picoDrawPointRaw(int x, int y, int color)
 {
-	fbuf[x + y * PICO_TOTAL_X] = color;
+	fbuf[x + y * PICO_X] = color;
 }
 
 int picoDrawPixmapRaw(int x, int y,
@@ -65,7 +64,7 @@ int picoDrawPixmapRaw(int x, int y,
 		return 0;
 	}
 
-	dst = fbuf + (y * PICO_TOTAL_X) + x;
+	dst = fbuf + (y * PICO_X) + x;
 	height = (pixmap->height_msb * 256) + pixmap->height_lsb;
 	width = (pixmap->width_msb * 256) + pixmap->width_lsb;
 	width_bytes = (width + 7) / 8;
@@ -88,7 +87,7 @@ int picoDrawPixmapRaw(int x, int y,
 			} /* i */
 		} /* xi */
 
-		dst += PICO_TOTAL_X;
+		dst += PICO_X;
 	}
 }
 
@@ -103,7 +102,7 @@ void picoFillRectRaw(int x, int y, int w, int h, int color)
 	{
 		unsigned char mask;
 
-		dst = fbuf + (y * PICO_TOTAL_X) + x;
+		dst = fbuf + (y * PICO_X) + x;
 		for (xi = x; xi <= xt; xi++)
 		{
 			*(dst++) = color;
@@ -122,7 +121,7 @@ void picoReverseRectRaw(int x, int y, int w, int h)
 	{
 		unsigned char mask;
 
-		dst = fbuf + (y * PICO_TOTAL_X) + x;
+		dst = fbuf + (y * PICO_X) + x;
 		for (xi = x; xi <= xt; xi++)
 		{
 			*(dst++) ^= 255;
@@ -166,7 +165,7 @@ int picoDrawTextRaw(int x, int y,
 
 		width_in_bytes = (width + 7) / 8;
 		src = font->data + (font->per_char[ch].offset_msb * 256) + font->per_char[ch].offset_lsb;
-		dst = fbuf + (y * PICO_TOTAL_X) + x;
+		dst = fbuf + (y * PICO_X) + x;
 
 		/* generic code */
 		xm2 = x & 1;
@@ -187,7 +186,7 @@ int picoDrawTextRaw(int x, int y,
 				} /* rof i */
 			} /* rof xi */
 
-			dst += PICO_TOTAL_X;
+			dst += PICO_X;
 		} /* rof yi */
 
 		x += width;
@@ -210,7 +209,7 @@ void picoScrollXRaw(int x, int y, int w, int h, int delta, int bgc)
 		{
 			for (yi = 0; yi < h; yi++)
 			{
-				src = fbuf + (y + yi) * PICO_TOTAL_X + x + xi;
+				src = fbuf + (y + yi) * PICO_X + x + xi;
 				dst = src - delta;
 				*dst = *src;
 			}
@@ -237,8 +236,8 @@ void picoScrollYRaw(int x, int y, int w, int h, int delta, int bgc)
 
 	if (delta > 0)
 	{
-		dst = fbuf + (y * PICO_TOTAL_X);
-		src = dst + (delta * PICO_TOTAL_X);
+		dst = fbuf + (y * PICO_X);
+		src = dst + (delta * PICO_X);
 
 		for (yi = 0; yi < (h - delta); yi++)
 		{
@@ -247,8 +246,8 @@ void picoScrollYRaw(int x, int y, int w, int h, int delta, int bgc)
 				dst[xi] = src[xi];
 			}
 
-			dst += PICO_TOTAL_X;
-			src += PICO_TOTAL_X;
+			dst += PICO_X;
+			src += PICO_X;
 		}
 
 		if (bgc != PTK_NO_COLOR)
@@ -260,15 +259,15 @@ void picoScrollYRaw(int x, int y, int w, int h, int delta, int bgc)
 					dst[xi] = bgc;
 				}
 
-				dst += PICO_TOTAL_X;
+				dst += PICO_X;
 			}
 		}
 	}
 	else
 	{
 		/* not yet tested ... */
-		dst = fbuf + ((y + h - 1) * PICO_TOTAL_X);
-		src = dst - (delta * PICO_TOTAL_X);
+		dst = fbuf + ((y + h - 1) * PICO_X);
+		src = dst - (delta * PICO_X);
 
 		for (yi = h - 1; yi >= (h - delta); yi--)
 		{
@@ -277,8 +276,8 @@ void picoScrollYRaw(int x, int y, int w, int h, int delta, int bgc)
 				dst[xi] = src[xi];
 			}
 
-			dst += PICO_TOTAL_X / 2;
-			src += PICO_TOTAL_X / 2;
+			dst += PICO_X / 2;
+			src += PICO_X / 2;
 		}
 
 		if (bgc != PTK_NO_COLOR)
@@ -290,7 +289,7 @@ void picoScrollYRaw(int x, int y, int w, int h, int delta, int bgc)
 					dst[xi] = bgc;
 				}
 
-				dst += PICO_TOTAL_X / 2;
+				dst += PICO_X / 2;
 			}
 		}
 	}

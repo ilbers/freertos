@@ -25,12 +25,14 @@
 #include <mm.h>
 
 #include "PTK.h"
+#include "PTK_config.h"
 
 #define ABS(x)	((x < 0) ? (-x) : (x))
 
 struct picoGC picoDefaultGC;
 
 unsigned char *fbuf;
+struct picoControlBlock *cb;
 
 void picoCreateGC(struct picoGC *gc)
 {
@@ -404,21 +406,26 @@ void picoTerminalCreate(struct picoTerminal *term,
 
 	memcpy(&(term->gc), gc, sizeof(struct picoGC));
 
-	term->fgc=gc->foreground;
-	term->hc=hc;
-	term->wc=wc;
-	term->ch=gc->font->height;
-	term->cw=gc->font->per_char['A'].width;
-	term->h=hc*gc->font->height;
-	term->w=wc*term->cw;
-	term->esc_state=0;
-	term->esc_len=0;
+	term->fgc       = gc->foreground;
+	term->hc        = hc;
+	term->wc        = wc;
+	term->ch        = gc->font->height;
+	term->cw        = gc->font->per_char['A'].width;
+	term->h         = hc * gc->font->height;
+	term->w         = wc * term->cw;
+	term->esc_state = 0;
+	term->esc_len   = 0;
 
-	picoFillRectRaw(x,y,term->w,term->h,gc->background);
+	term->term_widget = picoCreateWidget(x, y, term->w, term->h);
+	term->cmdline_widget = picoCreateWidget(x, y, term->w, term->ch);
+
+	picoFillRectRaw(x, y, term->w, term->h, gc->background);
 }
 
 void picoTerminalPutc(struct picoTerminal *term, int ch)
 {
+	int old_y = term->cursor_y;
+
 	/*
 	 * Handling of escape sequence.
 	 * esc_state==1:  Already rcvd escape character (ADE 27)
@@ -430,7 +437,7 @@ void picoTerminalPutc(struct picoTerminal *term, int ch)
 		{
 		case '[':
 			term->esc_state = 2;
-			term->esc_len=0;
+			term->esc_len = 0;
 			break;
 		default:
 			term->esc_state = 0;
@@ -566,6 +573,20 @@ void picoTerminalPutc(struct picoTerminal *term, int ch)
 	{
 		picoScrollY(&term->gc, term->x, term->y, term->w, term->h, term->ch);
 		term->cursor_y--;
+		picoUpdateWidget(term->term_widget);
+	}
+	else
+	{
+		if (old_y != term->cursor_y)
+		{
+			picoRemoveWidget(term->cmdline_widget);
+			term->cmdline_widget = picoCreateWidget(term->x,
+								term->y + term->cursor_y * term->ch,
+								term->w,
+								term->ch);
+		}
+
+		picoUpdateWidget(term->cmdline_widget);
 	}
 }
 
@@ -590,7 +611,23 @@ void picoInit(void)
 	int fd;
 	int i;
 
-	fbuf = (unsigned char *)MANGOFB_BASE_ADDR;
+	/* Fill MangoFB control block */
+	cb = (void *)MANGOFB_BASE_ADDR;
+
+	memset((void *)cb,
+	       0,
+	       sizeof(struct picoControlBlock) + sizeof(struct picoWidget) * (MAX_NR_WIDGETS - 1));
+
+	cb->magic          = MANGO_FB_MAGIC;
+	cb->max_nr_widgets = MAX_NR_WIDGETS;
+	cb->screen_x       = MANGOFB_SIZE_X;
+	cb->screen_y       = MANGOFB_SIZE_Y;
+	cb->colors         = COLORS_DEPTH;
+	cb->data_offset    = MANGOFB_DATA_OFFSET;
+	cb->nr_widgets     = 0;
+
+	/* Initialize raw FB data pointer */
+	fbuf = (unsigned char *)(MANGOFB_BASE_ADDR + MANGOFB_DATA_OFFSET);
 
 	picoCreateGC(&picoDefaultGC);
 	picoDriverInit();

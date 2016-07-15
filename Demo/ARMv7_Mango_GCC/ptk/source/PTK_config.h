@@ -25,7 +25,14 @@
 /* Current configuration emulates VESA BIOS SVGA mode 0x301 */
 
 /* Mango framebuffer size */
-#define FB_SIZE_X	640
-#define FB_SIZE_Y	480
+#define MANGOFB_SIZE_X		640
+#define MANGOFB_SIZE_Y		480
+
+#define COLORS_DEPTH		8
+
+#define MANGOFB_DATA_OFFSET	0x10000		/* 64KiB offset */
+#define MAX_NR_WIDGETS		32
+
+#define MANGO_FB_MAGIC		0x11072016
 
 #endif /* __PTK_CONFIG_H__ */

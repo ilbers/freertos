@@ -34,6 +34,7 @@
 static float sine_table[63];
 
 static rb_t sine1, sine2, sine3, sine4, sine5, sine6;
+static int backWidget, sineWidget, timeWidget;
 
 extern float sineX(float x);
 
@@ -68,9 +69,16 @@ static void demo_colors()
 		}
 	}
 
+	/* Refresh whole painting area to display demo */
+	picoUpdateWidget(backWidget);
+
 	vTaskDelay(configTICK_RATE_HZ * 10);
+
+	/* Clear screen after demo */
 	picoSetForeground(&gc, 0);
 	picoFillRect(&gc, 321, 0, 319, 334);
+	picoUpdateWidget(backWidget);
+
 	picoSetForeground(&gc, 7);
 }
 
@@ -84,6 +92,9 @@ static void demo_time(void)
 	picoSetFont(&gc, &font_helv_m20);
 	picoDrawTextCentered(&gc, 480, 312, "Demo: Running time");
 	picoSetFont(&gc, &font_8x13);
+
+	/* Refresh painting area */
+	picoUpdateWidget(backWidget);
 
 	picoSetFont(&gc,&font_helv_b34);
 
@@ -113,11 +124,16 @@ static void demo_time(void)
 		picoDrawRect(&gc, 410 - 2, 170 - 2, xs + 4, ys + 4);
 		picoDrawText(&gc, 410, 170, buf);
 
+		picoUpdateWidget(timeWidget);
+
 		vTaskDelay(configTICK_RATE_HZ);
 	}
 
+	/* Clear screen after demo */
 	picoSetForeground(&gc, 0);
 	picoFillRect(&gc, 350, 165, 250, 200);
+	picoUpdateWidget(backWidget);
+
 	picoSetForeground(&gc, 7);
 }
 
@@ -153,6 +169,9 @@ static void demo_sine(void)
 
 	picoDrawRect(&gc, 330, 100, 300, 130);
 
+	/* Refresh whole painting area */
+	picoUpdateWidget(backWidget);
+
 	/* Flush sine buffers */
 	rb_init(&sine1);
 	rb_init(&sine2);
@@ -165,33 +184,45 @@ static void demo_sine(void)
 	{
 		/* Y = 110 +/- 2 */
 		rb_push(&sine1, sine_table[(i * 5) % 63] * 2);
-		draw_sine(&sine1, 335, 110, 1);
 
 		/* Y = 124 +/- 4 */
 		rb_push(&sine2, sine_table[(i * 5) % 63] * 4);
-		draw_sine(&sine2, 335, 124, 2);
 
 		/* Y = 140 +/- 5 */
 		rb_push(&sine3, sine_table[(i * 2) % 63] * 5);
-		draw_sine(&sine3, 335, 140, 3);
 
 		/* Y = 160 +/- 7 */
 		rb_push(&sine4, sine_table[(i * 3) % 63] * 7);
-		draw_sine(&sine4, 335, 160, 4);
 
 		/* Y = 185 +/- 9 */
 		rb_push(&sine5, sine_table[i % 63] * 9);
-		draw_sine(&sine5, 335, 185, 5);
 
 		/* Y = 210 +/- 10 */
 		rb_push(&sine6, sine_table[(i * 2) % 63] * 10);
+
+
+		if (i < 290)
+		{
+			continue;
+		}
+
+		draw_sine(&sine1, 335, 110, 1);
+		draw_sine(&sine2, 335, 124, 2);
+		draw_sine(&sine3, 335, 140, 3);
+		draw_sine(&sine4, 335, 160, 4);
+		draw_sine(&sine5, 335, 185, 5);
 		draw_sine(&sine6, 335, 210, 6);
 
-		vTaskDelay(configTICK_RATE_HZ / 100);
+		picoUpdateWidget(sineWidget);
+
+		vTaskDelay(configTICK_RATE_HZ / 50);
 	}
 
+	/* Clear screen after demo */
 	picoSetForeground(&gc, 0);
-	picoFillRect(&gc, 330, 100, 300, 150);
+	picoFillRect(&gc, 330, 100, 300, 250);
+	picoUpdateWidget(backWidget);
+
 	picoSetForeground(&gc, 7);
 }
 
@@ -238,7 +269,7 @@ static void demo_term(void)
 		while(*p)
 		{
 			picoTerminalPrintf(&term1, "%c", *(p++));
-			vTaskDelay(configTICK_RATE_HZ / 20);
+			vTaskDelay(configTICK_RATE_HZ / 10);
 		}     
 	}
 }
@@ -249,6 +280,15 @@ void fbTask(void *unused)
 	portBASE_TYPE ret;
 
 	picoInit();
+
+	/* Create widgets: */
+
+	/* Window with sine drawings */
+	sineWidget = picoCreateWidget(330, 100, 300, 120);
+	/* Window with time */
+	timeWidget = picoCreateWidget(408, 168, 150, 100);
+	/* Part of the screen which contains demo drawings */
+	backWidget = picoCreateWidget(320, 0, 320, 350);
 
 	picoCreateGC(&gc);
 	picoSetForeground(&gc,7);
